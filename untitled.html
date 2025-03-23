@@ -1,0 +1,1048 @@
+<html lang="en"></html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poly Track</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/png" sizes="32x32" href="Screenshot 2025-03-09 at 10.29.33.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="Screenshot 2025-03-09 at 10.29.33.png">
+  <link rel="shortcut icon" href="Screenshot 2025-03-09 at 10.29.33.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+  <style>
+    /* Modern UI styling with enhanced professionalism */
+    body, html { 
+      margin: 0; 
+      overflow: hidden; 
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1a1f25 0%, #0f1318 100%);
+    }
+    
+    .game-title {
+      font-size: 4.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 2px 10px rgba(79,172,254,0.3);
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 3rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .game-button {
+      position: relative;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      border: none;
+      padding: 14px 32px;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 20px rgba(79,172,254,0.3);
+    }
+
+    .game-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        #4facfe 0%,
+        #00f2fe 25%,
+        #48c6ef 50%,
+        #4ade80 75%,
+        #22c55e 100%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .game-button:hover::before {
+      opacity: 1;
+    }
+
+    .game-button > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .game-button.danger::before {
+      background: linear-gradient(
+        90deg,
+        #FF416C 0%,
+        #FF4B2B 25%,
+        #FF6B6B 50%,
+        #FFA07A 75%,
+        #FF7F50 100%
+      );
+    }
+
+    .game-button.success::before {
+      background: linear-gradient(
+        90deg,
+        #48c6ef 0%,
+        #6f86d6 25%,
+        #4ade80 50%,
+        #22c55e 75%,
+        #15803d 100%
+      );
+    }
+
+    #recordDisplay {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 0.9rem;
+      letter-spacing: -0.02em;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    #mobileControls {
+      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 20px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .control-button {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 1.5rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .control-button:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Modern modal styling */
+    .modal {
+      backdrop-filter: blur(15px);
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #1a1f25 0%, #0f1318 100%);
+      color: white;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      padding: 2rem;
+    }
+
+    /* Settings button styling */
+    #settingsBtn {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    #settingsBtn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Feedback modal styling */
+    #feedbackContent {
+      background: linear-gradient(135deg, #1a1f25 0%, #0f1318 100%);
+      color: white;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+    }
+
+    .star {
+      font-size: 28px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .star:hover {
+      color: #ffd700;
+    }
+
+    .star.active {
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
+
+    textarea {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: white;
+      padding: 1rem;
+      font-family: 'Inter', sans-serif;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: rgba(79,172,254,0.5);
+      box-shadow: 0 0 0 2px rgba(79,172,254,0.2);
+    }
+
+    canvas { display: block; }
+    #recordDisplay { position: absolute; top: 10px; left: 10px; color: white; font-size: 18px; }
+    #winnerDisplay { position: absolute; top: 50px; left: 10px; color: yellow; font-size: 24px; }
+    #controlsModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; }
+    #controlsModalContent { background: white; padding: 20px; border-radius: 8px; text-align: center; }
+    #settingsBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+    }
+    
+    #feedbackModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    
+    .rating {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-black">
+  <div id="intro" class="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center">
+    <div class="glass-panel text-center">
+      <h1 class="game-title mb-6">Poly Track 3D</h1>
+      <p class="text-xl text-gray-300 mb-8">Experience high-speed racing in a stunning polygon world</p>
+      <div class="flex space-x-6">
+        <button id="startGameBtn" class="game-button success">
+            <span>Start Race</span>
+        </button>
+        <button id="resetGameBtn" class="game-button danger">
+            <span>Reset</span>
+        </button>
+        <button id="controlsBtn" class="game-button">
+            <span>Controls</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mobileControls" class="absolute bottom-0 left-0 w-full flex justify-center space-x-4 p-4">
+    <button id="turnLeftBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"><i class="fas fa-arrow-left"></i></button>
+    <button id="moveForwardBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"><i class="fas fa-arrow-up"></i></button>
+    <button id="turnRightBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"><i class="fas fa-arrow-right"></i></button>
+  </div>
+
+  <div id="controlsModal" class="flex">
+    <div id="controlsModalContent">
+      <h2 class="text-2xl font-bold mb-4">Controls</h2>
+      <p class="text-lg mb-4">Mobile:</p>
+      <ul class="text-left mb-4">
+        <li><i class="fas fa-arrow-up"></i> Move Forward</li>
+        <li><i class="fas fa-arrow-left"></i> Turn Left</li>
+        <li><i class="fas fa-arrow-right"></i> Turn Right</li>
+      </ul>
+      <p class="text-lg mb-4">Keyboard:</p>
+      <ul class="text-left mb-4">
+        <li>W - Move Forward</li>
+        <li>A - Turn Left</li>
+        <li>D - Turn Right</li>
+      </ul>
+      <button id="closeControlsBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Close</button>
+    </div>
+  </div>
+
+  <button id="settingsBtn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+    <i class="fas fa-cog"></i>
+  </button>
+
+  <div id="feedbackModal" class="flex">
+    <div id="feedbackContent">
+      <h2 class="text-2xl font-bold mb-4">Game Feedback</h2>
+      <div class="rating">
+        <span class="star" data-rating="1">★</span>
+        <span class="star" data-rating="2">★</span>
+        <span class="star" data-rating="3">★</span>
+        <span class="star" data-rating="4">★</span>
+        <span class="star" data-rating="5">★</span>
+      </div>
+      <textarea id="feedbackText" class="w-full h-32 p-2 border rounded mb-4" placeholder="What needs to be improved?"></textarea>
+      <div class="flex justify-end space-x-2">
+        <button id="submitFeedback" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Submit</button>
+        <button id="closeFeedback" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsMenu" class="modal" style="display: none;">
+    <div class="modal-content glass-panel w-64">
+      <h2 class="text-2xl font-bold mb-4 text-white">Menu</h2>
+      <div class="flex flex-col space-y-4">
+        <button id="rateGameBtn" class="game-button">Rate This Game</button>
+        <button id="settingsOptionsBtn" class="game-button">Settings</button>
+        <button id="closeSettingsMenu" class="game-button danger">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsOptionsModal" class="modal" style="display: none;">
+    <div class="modal-content glass-panel w-64">
+      <h2 class="text-2xl font-bold mb-4 text-white">Settings</h2>
+      <div class="flex flex-col space-y-4">
+        <button id="toggleMusicBtn" class="game-button">
+          <i class="fas fa-music mr-2"></i>
+          <span>Music: Off</span>
+        </button>
+        <button id="closeSettingsOptions" class="game-button danger">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="backgroundMusic" loop>
+    <source src="https://edhb15.github.io/skills-github-pages/New Recording 3.m4a" type="audio/mp4">
+    Your browser does not support the audio element.
+  </audio>
+
+  
+
+  <script>
+    // Set up scene, camera, and renderer
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    // Add fog to the scene for depth
+    scene.fog = new THREE.Fog(0x000000, 1, 1000);
+    scene.background = new THREE.Color(0x87CEEB); // Sky blue background
+
+    // Game Variables
+    let car;
+    let carSpeed = 0;
+    let maxSpeed = 0.5;
+    let carRotationSpeed = 0.05;
+    let carAcceleration = 0.05;
+    let carFriction = 0.98;
+    let finishLinePassed = false;
+    let raceStartTime = null;
+    let bestTime = null;
+    let lapCount = 0;
+    let gameOver = false;
+    let currentLevel = 1;
+    let movingObstacles = [];
+    let score = 0;
+    let trackLength = 500;
+
+    // Control states for the player
+    let moveForward = false;
+    let turnLeft = false;
+    let turnRight = false;
+
+    // Track Setup
+    const trackRadius = 10;
+    const obstacles = [];
+    const speedBoostZones = [];
+
+    // Replace the levelConfig object with a function that generates level config
+    function generateLevelConfig(level) {
+        return {
+            obstacles: Math.min(10 + (level * 5), 50), // Increases by 5 each level, max 50
+            movingObstacles: Math.min(5 + (level * 3), 30), // Increases by 3 each level, max 30
+            maxSpeed: Math.min(0.5 + (level * 0.1), 2.0), // Increases by 0.1 each level, max 2.0
+            obstacleSpeed: Math.min(0.1 + (level * 0.05), 0.5), // Increases obstacle speed
+            trackLength: 500 + (level * 100) // Track gets longer each level
+        };
+    }
+
+    // Track Setup
+    function createTrack() {
+        // Create main track surface
+        const geometry = new THREE.PlaneGeometry(trackRadius * 2, trackLength);
+        const material = new THREE.MeshPhongMaterial({ 
+            color: 0x404040,  // Darker gray
+            shininess: 10,
+            specular: 0x333333
+        });
+        
+        const trackMesh = new THREE.Mesh(geometry, material);
+        trackMesh.rotation.x = -Math.PI / 2;
+        trackMesh.position.y = 0;
+        trackMesh.position.z = 0;
+        trackMesh.receiveShadow = true;
+        scene.add(trackMesh);
+
+        // Add track markings (white lines)
+        const lineGeometry = new THREE.PlaneGeometry(0.3, trackLength);
+        const lineMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff
+        });
+
+        // Left track marking
+        const leftLine = new THREE.Mesh(lineGeometry, lineMaterial);
+        leftLine.rotation.x = -Math.PI / 2;
+        leftLine.position.set(-trackRadius * 0.7, 0.01, 0);
+        scene.add(leftLine);
+
+        // Right track marking
+        const rightLine = new THREE.Mesh(lineGeometry, lineMaterial);
+        rightLine.rotation.x = -Math.PI / 2;
+        rightLine.position.set(trackRadius * 0.7, 0.01, 0);
+        scene.add(rightLine);
+
+        // Add track kerbs (red and white stripes)
+        const kerbGeometry = new THREE.BoxGeometry(1, 0.2, trackLength);
+        const kerbMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                stripeWidth: { value: 2.0 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying vec2 vUv;
+                uniform float stripeWidth;
+                void main() {
+                    float stripe = mod(vUv.y * 50.0, stripeWidth);
+                    if(stripe < stripeWidth/2.0) {
+                        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red
+                    } else {
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); // White
+                    }
+                }
+            `
+        });
+
+        // Left kerb
+        const leftKerb = new THREE.Mesh(kerbGeometry, kerbMaterial);
+        leftKerb.position.set(-trackRadius - 0.5, 0.1, 0);
+        scene.add(leftKerb);
+
+        // Right kerb
+        const rightKerb = new THREE.Mesh(kerbGeometry, kerbMaterial);
+        rightKerb.position.set(trackRadius + 0.5, 0.1, 0);
+        scene.add(rightKerb);
+
+        // Create finish line
+        const finishLineGeometry = new THREE.PlaneGeometry(trackRadius * 2, 4);
+        const finishLineMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const finishLine = new THREE.Mesh(finishLineGeometry, finishLineMaterial);
+        finishLine.rotation.x = -Math.PI / 2;
+        finishLine.position.set(0, 0.02, trackLength / 2);
+        scene.add(finishLine);
+
+        // Create speed boost zones and obstacles
+        createSpeedBoostZones();
+        createObstacles();
+    }
+
+    // Create speed boost zone
+    function createSpeedBoostZone(x, z) {
+      const geometry = new THREE.BoxGeometry(2, 0.1, 2);
+      const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+      const boostZone = new THREE.Mesh(geometry, material);
+      boostZone.position.set(x, 0.1, z);
+      scene.add(boostZone);
+      speedBoostZones.push(boostZone);
+    }
+
+    // Create obstacles with boundaries
+    function createObstacles() {
+        const config = generateLevelConfig(currentLevel);
+        
+        // Static obstacles
+        for (let i = 0; i < config.obstacles; i++) {
+            const z = (-trackLength/2) + (trackLength * (i / config.obstacles)) + 20;
+            const x = (Math.random() - 0.5) * (trackRadius * 1.5);
+            
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+            const obstacle = new THREE.Mesh(geometry, material);
+            obstacle.position.set(x, 1, z);
+            scene.add(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        // Moving obstacles
+        for (let i = 0; i < config.movingObstacles; i++) {
+            const z = (-trackLength/2) + (trackLength * (i / config.movingObstacles)) + 20;
+            const x = (Math.random() - 0.5) * (trackRadius * 1.5);
+            
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const obstacle = new THREE.Mesh(geometry, material);
+            obstacle.position.set(x, 1, z);
+            
+            obstacle.movement = {
+                direction: Math.random() > 0.5 ? 1 : -1,
+                speed: config.obstacleSpeed,
+                range: trackRadius * 0.8
+            };
+            
+            scene.add(obstacle);
+            movingObstacles.push(obstacle);
+        }
+    }
+
+    // Add a new function to load the car model
+    function loadCarModel(startPosX, startPosZ) {
+        const loader = new THREE.OBJLoader();
+        loader.load('uploads_files_2792345_Koenigsegg.obj', (object) => {
+            object.position.set(startPosX, 0.5, startPosZ);
+            object.scale.set(0.1, 0.1, 0.1); // Adjust scale to make the car smaller
+            object.rotation.y =0; // Adjust rotation to face forward (180 degrees)
+            scene.add(object);
+            car = object; // Set the car variable to the loaded model
+        }, undefined, (error) => {
+            console.error('An error happened while loading the car model:', error);
+        });
+    }
+
+    // Enhanced lighting
+    function addLights() {
+      // Ambient light
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+      scene.add(ambientLight);
+
+      // Main directional light (sun)
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      dirLight.position.set(100, 100, 50);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 4096;
+      dirLight.shadow.mapSize.height = 4096;
+      dirLight.shadow.camera.near = 1;
+      dirLight.shadow.camera.far = 500;
+      dirLight.shadow.camera.left = -50;
+      dirLight.shadow.camera.right = 50;
+      dirLight.shadow.camera.top = 50;
+      dirLight.shadow.camera.bottom = -50;
+      scene.add(dirLight);
+
+      // Add atmospheric lighting
+      const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x404040, 0.6);
+      scene.add(hemisphereLight);
+
+      // Track spotlights
+      for (let z = -trackLength/2; z < trackLength/2; z += 50) {
+        const spotLight = new THREE.SpotLight(0xFFFFFF, 0.8);
+        spotLight.position.set(trackRadius + 5, 15, z);
+        spotLight.angle = Math.PI / 6;
+        spotLight.penumbra = 0.3;
+        spotLight.decay = 1;
+        spotLight.distance = 30;
+        spotLight.castShadow = true;
+        scene.add(spotLight);
+
+        // Add light on the other side
+        const spotLight2 = spotLight.clone();
+        spotLight2.position.x = -(trackRadius + 5);
+        scene.add(spotLight2);
+      }
+    }
+
+    // Update the handleControls function
+    function handleControls() {
+        if (moveForward) {
+            carSpeed = Math.min(carSpeed + carAcceleration, maxSpeed);
+        } else {
+            carSpeed = Math.max(carSpeed * carFriction, 0);
+        }
+
+        if (turnLeft) {
+            car.rotation.y += carRotationSpeed;
+        }
+
+        if (turnRight) {
+            car.rotation.y -= carRotationSpeed;
+        }
+
+        // Fix the movement direction by inverting the sin and cos
+        car.position.x += carSpeed * Math.sin(car.rotation.y);
+        car.position.z += carSpeed * Math.cos(car.rotation.y);
+    }
+
+    // Event listener for key controls
+    function handleKeyDown(event) {
+      if (event.key === 'w') moveForward = true; // Move Forward
+      if (event.key === 'a') turnLeft = true; // Turn Left
+      if (event.key === 'd') turnRight = true; // Turn Right
+    }
+
+    function handleKeyUp(event) {
+      if (event.key === 'w') moveForward = false; // Stop Moving Forward
+      if (event.key === 'a') turnLeft = false; // Stop Turning Left
+      if (event.key === 'd') turnRight = false; // Stop Turning Right
+    }
+
+    // Add event listeners for key down/up
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    // Mobile controls event listeners
+    document.getElementById('moveForwardBtn').addEventListener('mousedown', () => moveForward = true);
+    document.getElementById('moveForwardBtn').addEventListener('mouseup', () => moveForward = false);
+    document.getElementById('moveForwardBtn').addEventListener('touchstart', () => moveForward = true);
+    document.getElementById('moveForwardBtn').addEventListener('touchend', () => moveForward = false);
+
+    document.getElementById('turnLeftBtn').addEventListener('mousedown', () => turnLeft = true);
+    document.getElementById('turnLeftBtn').addEventListener('mouseup', () => turnLeft = false);
+    document.getElementById('turnLeftBtn').addEventListener('touchstart', () => turnLeft = true);
+    document.getElementById('turnLeftBtn').addEventListener('touchend', () => turnLeft = false);
+
+    document.getElementById('turnRightBtn').addEventListener('mousedown', () => turnRight = true);
+    document.getElementById('turnRightBtn').addEventListener('mouseup', () => turnRight = false);
+    document.getElementById('turnRightBtn').addEventListener('touchstart', () => turnRight = true);
+    document.getElementById('turnRightBtn').addEventListener('touchend', () => turnRight = false);
+
+    // Check collisions with obstacles
+    function checkCollisions() {
+      [...obstacles, ...movingObstacles].forEach((obstacle) => {
+        if (car.position.distanceTo(obstacle.position) < 2) {
+          resetCar();
+        }
+      });
+
+      speedBoostZones.forEach((zone) => {
+        if (car.position.distanceTo(zone.position) < 3) {
+          carSpeed = Math.min(carSpeed * 1.5, maxSpeed);
+        }
+      });
+
+      // Check if car goes outside track boundaries
+      if (Math.abs(car.position.x) > trackRadius) {
+        resetCar();
+      }
+    }
+
+    // Check finish line and update records
+    function checkFinishLine() {
+      if (!finishLinePassed && car.position.z > trackLength / 2) {
+        finishLinePassed = true;
+        if (raceStartTime === null) { // Ensure raceStartTime is set only once
+          raceStartTime = Date.now(); // Start timing when crossing the finish line
+        }
+        lapCount++;
+        calculateScore(); // Calculate score when the finish line is crossed
+      }
+    }
+
+    // Calculate score and display it
+    function calculateScore() {
+      const raceTime = (Date.now() - raceStartTime) / 1000; // Calculate race time
+      score = (raceTime / currentLevel) * 10; // Calculate score based on time and level
+      displayScore(); // Show score after completing the level
+    }
+
+    // Update records
+    function updateRecords() {
+      if (finishLinePassed) {
+        const raceTime = (Date.now() - raceStartTime) / 1000;
+        if (!bestTime || raceTime < bestTime) {
+          bestTime = raceTime;
+        }
+      }
+    }
+
+    // Display records
+    function displayRecords() {
+      const recordText = `Best Time: ${bestTime ? bestTime.toFixed(2) : 'N/A'}s | Laps: ${lapCount} | Level: ${currentLevel}`;
+      document.getElementById('recordDisplay').innerText = recordText;
+    }
+
+    // Reset car position and speed
+    function resetCar() {
+      // Reset to middle of track width, near the start
+      car.position.set(0, 0.25, -trackLength/2 + 10);
+      car.rotation.set(0, Math.PI, 0); // Rotate 180 degrees around Y axis to face forward
+      carSpeed = 0;
+      raceStartTime = null; // Reset raceStartTime when the car is reset
+    }
+
+    // Move to the next level
+    function nextLevel() {
+        currentLevel++;
+        const config = generateLevelConfig(currentLevel);
+        
+        finishLinePassed = false;
+        maxSpeed = config.maxSpeed;
+        trackLength = config.trackLength; // Update track length
+        
+        resetCar();
+        clearTrack();
+        createTrack();
+        
+        // Show level transition message
+        const levelMessage = document.createElement('div');
+        levelMessage.style.position = 'fixed';
+        levelMessage.style.top = '50%';
+        levelMessage.style.left = '50%';
+        levelMessage.style.transform = 'translate(-50%, -50%)';
+        levelMessage.style.background = 'rgba(0, 0, 0, 0.8)';
+        levelMessage.style.color = 'white';
+        levelMessage.style.padding = '20px';
+        levelMessage.style.borderRadius = '10px';
+        levelMessage.style.fontSize = '24px';
+        levelMessage.style.zIndex = '1000';
+        levelMessage.innerHTML = `Level ${currentLevel}`;
+        
+        document.body.appendChild(levelMessage);
+        setTimeout(() => document.body.removeChild(levelMessage), 2000);
+    }
+
+    // Create a function to display the score in a modal
+    function displayScore() {
+        const scoreModal = document.createElement('div');
+        scoreModal.id = 'scoreModal';
+        scoreModal.style.position = 'fixed';
+        scoreModal.style.top = '50%';
+        scoreModal.style.left = '50%';
+        scoreModal.style.transform = 'translate(-50%, -50%)';
+        scoreModal.style.background = 'rgba(255, 255, 255, 0.9)';
+        scoreModal.style.padding = '20px';
+        scoreModal.style.borderRadius = '8px';
+        scoreModal.style.textAlign = 'center';
+        scoreModal.style.zIndex = '1000';
+        
+        scoreModal.innerHTML = `
+            <h2 class="text-2xl font-bold mb-4">Level ${currentLevel} Complete!</h2>
+            <p class="text-lg mb-4">Your Score: ${score.toFixed(2)}</p>
+            <p class="text-lg mb-4">Time: ${((Date.now() - raceStartTime) / 1000).toFixed(2)}s</p>
+            <div class="flex justify-center">
+                <button id="nextLevelBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2">Next Level</button>
+                <button id="retryLevelBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Retry Level</button>
+            </div>
+        `;
+        document.body.appendChild(scoreModal);
+
+        document.getElementById('nextLevelBtn').addEventListener('click', () => {
+            document.body.removeChild(scoreModal);
+            nextLevel();
+        });
+
+        document.getElementById('retryLevelBtn').addEventListener('click', () => {
+            document.body.removeChild(scoreModal);
+            resetCar();
+        });
+    }
+
+    // Clear the track
+    function clearTrack() {
+      obstacles.forEach(obstacle => scene.remove(obstacle));
+      movingObstacles.forEach(obstacle => scene.remove(obstacle));
+      speedBoostZones.forEach(zone => scene.remove(zone));
+      obstacles.length = 0;
+      movingObstacles.length = 0;
+      speedBoostZones.length = 0;
+    }
+
+    // Add these functions before init()
+    function createSpeedBoostZones() {
+        // Add speed boost zones at regular intervals
+        for (let z = -trackLength/2; z < trackLength/2; z += 50) {
+            const x = (Math.random() - 0.5) * (trackRadius * 1.5);
+            createSpeedBoostZone(x, z);
+        }
+    }
+
+    // Add this new function to update moving obstacles
+    function updateMovingObstacles() {
+        movingObstacles.forEach(obstacle => {
+            // Update position
+            obstacle.position.x += obstacle.movement.direction * obstacle.movement.speed;
+            
+            // Check boundaries and reverse direction
+            if (Math.abs(obstacle.position.x) > obstacle.movement.range) {
+                obstacle.movement.direction *= -1;
+            }
+            
+            // Add some vertical bobbing motion
+            obstacle.position.y = 1 + Math.sin(Date.now() * 0.003) * 0.5;
+        });
+    }
+
+    // Update the init function
+    function init() {
+        // Create scene elements
+        createTrack();
+        
+        // Load the car model at the start of the track, facing forward
+        loadCarModel(0, -trackLength/2 + 10);
+        // Adjust camera position to better see the car
+        camera.position.set(0, 5, -trackLength/2 - 5); // Moved camera closer and lower
+        camera.lookAt(new THREE.Vector3(0, 0.5, -trackLength/2 + 10)); // Adjusted to look at the car's position
+
+        // Add ambient light to better see the car
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        // Add directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(0, 10, 0);
+        scene.add(directionalLight);
+
+        // Create UI elements
+        const recordDisplay = document.createElement('div');
+        recordDisplay.id = 'recordDisplay';
+        document.body.appendChild(recordDisplay);
+
+        const winnerDisplay = document.createElement('div');
+        winnerDisplay.id = 'winnerDisplay';
+        document.body.appendChild(winnerDisplay);
+
+        // Start animation loop
+        animate();
+    }
+
+    // Animation loop
+    function animate() {
+      if (gameOver) return;
+
+      requestAnimationFrame(animate);
+
+      handleControls();
+      updateMovingObstacles();
+      checkCollisions();
+      checkFinishLine();
+      updateRecords();
+
+      // Update camera to follow car
+      camera.position.x = car.position.x;
+      camera.position.z = car.position.z - 10;
+      camera.position.y = car.position.y + 5;
+      camera.lookAt(car.position);
+
+      renderer.render(scene, camera);
+      displayRecords();
+    }
+
+    // Start game button event listener
+    document.getElementById('startGameBtn').addEventListener('click', () => {
+      document.getElementById('intro').style.display = 'none';
+      init();
+    });
+
+    // Reset game button event listener
+    document.getElementById('resetGameBtn').addEventListener('click', () => {
+      location.reload();
+    });
+
+    // Controls button event listener
+    document.getElementById('controlsBtn').addEventListener('click', () => {
+      document.getElementById('controlsModal').style.display = 'flex';
+    });
+
+    // Close controls modal event listener
+    document.getElementById('closeControlsBtn').addEventListener('click', () => {
+      document.getElementById('controlsModal').style.display = 'none';
+    });
+
+    // Settings and feedback functionality
+    const settingsMenu = document.getElementById('settingsMenu');
+    const settingsOptionsModal = document.getElementById('settingsOptionsModal');
+    const backgroundMusic = document.getElementById('backgroundMusic');
+    let isMusicPlaying = false;
+
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      settingsMenu.style.display = 'flex';
+    });
+
+    document.getElementById('closeSettingsMenu').addEventListener('click', () => {
+      settingsMenu.style.display = 'none';
+    });
+
+    document.getElementById('rateGameBtn').addEventListener('click', () => {
+      settingsMenu.style.display = 'none';
+      document.getElementById('feedbackModal').style.display = 'flex';
+    });
+
+    document.getElementById('settingsOptionsBtn').addEventListener('click', () => {
+      settingsMenu.style.display = 'none';
+      settingsOptionsModal.style.display = 'flex';
+    });
+
+    document.getElementById('closeSettingsOptions').addEventListener('click', () => {
+      settingsOptionsModal.style.display = 'none';
+      settingsMenu.style.display = 'flex';
+    });
+
+    document.getElementById('toggleMusicBtn').addEventListener('click', () => {
+      const toggleBtn = document.getElementById('toggleMusicBtn');
+      const toggleText = toggleBtn.querySelector('span');
+      
+      if (isMusicPlaying) {
+        backgroundMusic.pause();
+        toggleText.textContent = 'Music: Off';
+      } else {
+        backgroundMusic.play()
+          .then(() => {
+            console.log("Audio playback started successfully");
+          })
+          .catch(error => {
+            console.error("Audio playback failed:", error);
+            alert("Failed to play audio. Make sure the audio file exists and is in the correct format.");
+            toggleText.textContent = 'Music: Off';
+            isMusicPlaying = false;
+          });
+        toggleText.textContent = 'Music: On';
+      }
+      
+      isMusicPlaying = !isMusicPlaying;
+    });
+
+    // Add this to check if the audio file loaded correctly
+    backgroundMusic.addEventListener('error', (e) => {
+      console.error('Error loading audio file:', e);
+      alert('Error loading audio file. Please check if the file exists and is in the correct location.');
+    });
+
+    // Star rating functionality
+    let currentRating = 0;
+    const stars = document.querySelectorAll('.star');
+    
+    stars.forEach(star => {
+      star.addEventListener('click', (e) => {
+        currentRating = parseInt(e.target.dataset.rating);
+        updateStars();
+      });
+    });
+
+    function updateStars() {
+      stars.forEach(star => {
+        const rating = parseInt(star.dataset.rating);
+        if (rating <= currentRating) {
+          star.classList.add('active');
+        } else {
+          star.classList.remove('active');
+        }
+      });
+    }
+
+    // Submit feedback
+    document.getElementById('submitFeedback').addEventListener('click', async () => {
+      const feedback = document.getElementById('feedbackText').value;
+      if (!feedback) {
+        alert('Please provide some feedback before submitting.');
+        return;
+      }
+
+      // Show loading state
+      const submitBtn = document.getElementById('submitFeedback');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Sending...';
+      submitBtn.disabled = true;
+
+      try {
+        // Replace this URL with your Google Apps Script web app URL
+        const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+        
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rating: currentRating,
+            feedback: feedback
+          })
+        });
+
+        // Close the modal and reset form
+        document.getElementById('feedbackModal').style.display = 'none';
+        document.getElementById('feedbackText').value = '';
+        currentRating = 0;
+        updateStars();
+        
+        // Show success message
+        alert('Thank you for your feedback!');
+      } catch (error) {
+        console.error('Error sending feedback:', error);
+        alert('Sorry, there was an error sending your feedback. Please try again.');
+      } finally {
+        // Reset button state
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Add these to handle closing modals when clicking outside
+    window.addEventListener('click', (event) => {
+      if (event.target === settingsMenu) {
+        settingsMenu.style.display = 'none';
+      }
+      if (event.target === settingsOptionsModal) {
+        settingsOptionsModal.style.display = 'none';
+      }
+    });
+
+    // Add this JavaScript after your existing scripts
+    document.querySelectorAll('.game-button').forEach(button => {
+        button.addEventListener('mousemove', (e) => {
+            const rect = button.getBoundingClientRect();
+            const x = e.clientX - rect.left; // Get cursor x position within button
+            const percentage = x / rect.width; // Calculate percentage across button width
+            
+            // Move gradient based on cursor position
+            button.style.setProperty('--hover-position', `${-50 + (percentage * 100)}%`);
+        });
+
+        button.addEventListener('mouseleave', () => {
+            button.style.setProperty('--hover-position', '-50%');
+        });
+    });
+  </script>
+</body>
+</html>
