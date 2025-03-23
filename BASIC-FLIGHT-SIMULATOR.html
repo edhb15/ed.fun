@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced Flight Simulator</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        .hud {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: lime;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid lime;
+        }
+        .instruments {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 5px;
+            border: 1px solid lime;
+            padding: 10px;
+        }
+        .compass {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #222;
+            border: 2px solid #555;
+            position: relative;
+            margin: 0 auto;
+        }
+        .compass-arrow {
+            position: absolute;
+            top: 10px;
+            left: 48px;
+            width: 4px;
+            height: 40px;
+            background: linear-gradient(red, white);
+        }
+        .compass-mark {
+            position: absolute;
+            font-family: monospace;
+            color: white;
+            font-size: 10px;
+        }
+        .artificial-horizon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, #1E90FF 50%, #8B4513 50%);
+            border: 2px solid #555;
+            position: relative;
+            margin: 10px auto;
+            overflow: hidden;
+        }
+        .horizon-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: white;
+            top: 50px;
+            left: 0;
+        }
+        .instrument-label {
+            color: lime;
+            font-family: monospace;
+            text-align: center;
+            margin-top: 5px;
+        }
+        .view-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: lime;
+            border: 1px solid lime;
+            padding: 5px 10px;
+            font-family: monospace;
+            cursor: pointer;
+        }
+        .cockpit-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+        }
+        .cockpit-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .geoFS-hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 10;
+        }
+        .geoFS-buttons {
+            position: fixed;
+            top: 40px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .geoFS-button {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: 1px solid #444;
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            font-family: 'Arial', sans-serif;
+            cursor: pointer;
+            width: 120px;
+            text-align: center;
+        }
+        .airspeed-indicator {
+            position: fixed;
+            left: 10px;
+            bottom: 220px;
+            width: 100px;
+            height: 100px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50%;
+            border: 2px solid #444;
+        }
+        .airspeed-needle {
+            position: absolute;
+            width: 2px;
+            height: 45px;
+            background: white;
+            left: 49px;
+            top: 10px;
+            transform-origin: bottom center;
+        }
+        .altitude-indicator {
+            position: fixed;
+            left: 120px;
+            bottom: 220px;
+            width: 100px;
+            height: 100px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50%;
+            border: 2px solid #444;
+        }
+        .altitude-needle {
+            position: absolute;
+            width: 2px;
+            height: 45px;
+            background: white;
+            left: 49px;
+            top: 10px;
+            transform-origin: bottom center;
+        }
+        .instrument-label {
+            color: white;
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(to bottom, #1e5799, #7db9e8); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <div style="font-size:36px; color:white; font-family:'Arial', sans-serif; font-weight:bold; margin-bottom:20px;">
+            Flight Simulator
+        </div>
+        <div style="width:300px; height:20px; background:rgba(255,255,255,0.3); border-radius:10px; overflow:hidden; margin-bottom:40px;">
+            <div id="loading-bar" style="width:0%; height:100%; background:white; border-radius:10px; transition:width 0.5s;"></div>
+        </div>
+        <div id="loading-text" style="font-size:16px; color:white; font-family:'Arial', sans-serif;">Loading world...</div>
+    </div>
+
+    <div id="main-menu" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; display:none; justify-content:center; align-items:center;">
+        <div style="width:600px; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+            <div style="font-size:24px; margin-bottom:20px; text-align:center; font-family:'Arial', sans-serif; font-weight:bold;">
+                Flight Simulator
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                <div id="aircraft-select" style="padding:10px; border:1px solid #ddd; cursor:pointer; text-align:center; font-family:'Arial', sans-serif;">
+                    Cessna 172
+                </div>
+                <div id="location-select" style="padding:10px; border:1px solid #ddd; cursor:pointer; text-align:center; font-family:'Arial', sans-serif;">
+                    Default Airport
+                </div>
+            </div>
+            <div id="fly-button" style="background:#4CAF50; color:white; padding:10px; text-align:center; cursor:pointer; font-family:'Arial', sans-serif; font-weight:bold;">
+                FLY NOW
+            </div>
+        </div>
+    </div>
+
+    <div class="geoFS-hud">
+        <div style="flex: 1;">Speed: <span id="speed">0</span> kt | Alt: <span id="altitude">0</span> ft | Hdg: <span id="heading">0</span>°</div>
+        <div>Flight Simulator</div>
+        <div style="flex: 1; text-align: right;">LON: <span id="lon">0.000</span> LAT: <span id="lat">0.000</span></div>
+    </div>
+
+    <div class="geoFS-buttons">
+        <div class="geoFS-button" id="autopilotBtn">AUTOPILOT</div>
+        <div class="geoFS-button" id="viewBtn">EXTERNAL VIEW</div>
+        <div class="geoFS-button" id="mapBtn">MAP</div>
+        <div class="geoFS-button" id="resetBtn">RESET</div>
+    </div>
+
+    <div class="airspeed-indicator">
+        <div class="airspeed-needle" id="airspeed-needle"></div>
+    </div>
+    <div class="instrument-label">AIRSPEED</div>
+
+    <div class="altitude-indicator">
+        <div class="altitude-needle" id="altitude-needle"></div>
+    </div>
+    <div class="instrument-label">ALTITUDE</div>
+
+    <div class="artificial-horizon" style="position: fixed; left: 10px; bottom: 100px; width: 100px; height: 100px;">
+        <div class="horizon-line"></div>
+    </div>
+    <div class="instrument-label">ATTITUDE</div>
+
+    <div class="compass" style="position: fixed; left: 120px; bottom: 100px; width: 100px; height: 100px;">
+        <div class="compass-arrow"></div>
+        <div class="compass-mark" style="top: 5px; left: 45px;">N</div>
+        <div class="compass-mark" style="top: 45px; left: 85px;">E</div>
+        <div class="compass-mark" style="top: 85px; left: 45px;">S</div>
+        <div class="compass-mark" style="top: 45px; left: 5px;">W</div>
+    </div>
+    <div class="instrument-label">HEADING</div>
+
+    <div style="position: fixed; top: 40px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; font-family: 'Arial', sans-serif;">
+        <div>FLIGHT DATA</div>
+        <hr>
+        <div>VS: <span id="vertical-speed">0</span> ft/min</div>
+        <div>IAS: <span id="indicated-airspeed">0</span> kt</div>
+        <div>GS: <span id="ground-speed">0</span> kt</div>
+        <div>Pitch: <span id="pitch-value">0</span>°</div>
+        <div>Roll: <span id="roll-value">0</span>°</div>
+        <div>Throttle: <span id="thrust-value">0</span>%</div>
+        <div>Stall: <span id="stall">No</span></div>
+    </div>
+
+    <div id="debug-panel" style="position: fixed; bottom: 10px; left: 230px; background: rgba(0,0,0,0.7); color: white; padding: 10px; font-family: 'Arial', sans-serif; display: none;">
+        <div>DEBUG INFO:</div>
+        <div>Heading: <span id="debug-heading">0</span>°</div>
+        <div>Forward X: <span id="debug-forward-x">0</span></div>
+        <div>Forward Y: <span id="debug-forward-y">0</span></div>
+        <div>Forward Z: <span id="debug-forward-z">0</span></div>
+        <div>Velocity X: <span id="debug-vel-x">0</span></div>
+        <div>Velocity Y: <span id="debug-vel-y">0</span></div>
+        <div>Velocity Z: <span id="debug-vel-z">0</span></div>
+    </div>
+
+    <div id="control-info" style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; font-family: 'Arial', sans-serif;">
+        Controls: Arrow keys, A/D for yaw, 0-9 for thrust<br>
+        L: Auto-level | R: Reset position
+    </div>
+
+    <button class="view-toggle" id="viewToggle">Switch to Cockpit View</button>
+    <div class="cockpit-frame" id="cockpitFrame">
+        <img src="https://i.imgur.com/JXe9uyN.jpg" style="width:100%; height:100%; object-fit:cover; opacity:0.7;">
+        <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(rgba(0,0,0,0.5), transparent, rgba(0,0,0,0.3));"></div>
+        <div style="position:absolute; bottom:20%; left:25%; width:50%; height:40%; border:2px solid rgba(255,255,255,0.3); border-radius:10px;"></div>
+    </div>
+
+    <div id="map-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:900; display:none; justify-content:center; align-items:center;">
+        <div style="width:80%; height:80%; background:#333; border-radius:10px; position:relative; overflow:hidden;">
+            <div style="padding:10px; background:#222; color:white; font-family:'Arial', sans-serif; display:flex; justify-content:space-between; align-items:center;">
+                <div>Flight Map</div>
+                <div id="close-map" style="cursor:pointer; padding:5px 10px; background:#555; border-radius:3px;">Close</div>
+            </div>
+            <div style="width:100%; height:calc(100% - 40px); background:#111; position:relative;">
+                <!-- Simple map implementation -->
+                <div id="map-grid" style="width:100%; height:100%; background-image:linear-gradient(rgba(30,144,255,0.1) 1px, transparent 1px),linear-gradient(90deg, rgba(30,144,255,0.1) 1px, transparent 1px); background-size:20px 20px;"></div>
+                <div id="map-plane" style="position:absolute; top:50%; left:50%; width:10px; height:10px; background:red; border-radius:50%; transform:translate(-50%, -50%);"></div>
+                <div id="map-airport" style="position:absolute; top:48%; left:48%; width:15px; height:15px; background:blue; transform:translate(-50%, -50%);" title="Default Airport"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-button" style="position:fixed; top:10px; right:120px; background:rgba(0,0,0,0.7); color:white; padding:5px 10px; font-family:'Arial', sans-serif; cursor:pointer; z-index:100;">
+        SETTINGS
+    </div>
+
+    <div id="settings-panel" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:900; display:none; justify-content:center; align-items:center;">
+        <div style="width:600px; background:#333; border-radius:10px; padding:20px; color:white; font-family:'Arial', sans-serif;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <div style="font-size:20px; font-weight:bold;">Settings</div>
+                <div id="close-settings" style="cursor:pointer; padding:5px 10px; background:#555; border-radius:3px;">Close</div>
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <div style="margin-bottom:5px;">Graphics Quality</div>
+                <select id="graphics-quality" style="width:100%; padding:5px; background:#444; color:white; border:1px solid #555;">
+                    <option>Low</option>
+                    <option selected>Medium</option>
+                    <option>High</option>
+                    <option>Ultra</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <div style="margin-bottom:5px;">Control Sensitivity</div>
+                <input type="range" style="width:100%;" min="1" max="10" value="5">
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <div style="margin-bottom:5px;">Time of Day</div>
+                <input type="range" id="time-slider" style="width:100%;" min="0" max="23" value="12">
+                <div style="text-align:center; margin-top:5px;" id="time-display">12:00</div>
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <div style="margin-bottom:5px;">Weather</div>
+                <select id="weather-select" style="width:100%; padding:5px; background:#444; color:white; border:1px solid #555;">
+                    <option value="clear">Clear</option>
+                    <option value="scattered" selected>Scattered Clouds</option>
+                    <option value="overcast">Overcast</option>
+                    <option value="stormy">Stormy</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="flight-plan-button" style="position:fixed; top:10px; right:200px; background:rgba(0,0,0,0.7); color:white; padding:5px 10px; font-family:'Arial', sans-serif; cursor:pointer; z-index:100;">
+        FLIGHT PLAN
+    </div>
+
+    <div id="flight-plan-panel" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:900; display:none; justify-content:center; align-items:center;">
+        <div style="width:600px; background:#333; border-radius:10px; padding:20px; color:white; font-family:'Arial', sans-serif;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <div style="font-size:20px; font-weight:bold;">Flight Planning</div>
+                <div id="close-flight-plan" style="cursor:pointer; padding:5px 10px; background:#555; border-radius:3px;">Close</div>
+            </div>
+            
+            <div>
+                <div style="margin-bottom:15px;">
+                    <div style="margin-bottom:5px;">Departure</div>
+                    <select id="departure-airport" style="width:100%; padding:5px; background:#444; color:white; border:1px solid #555;">
+                        <option selected>Default Airport</option>
+                        <option>City International</option>
+                        <option>Mountain Regional</option>
+                        <option>Coastal Airfield</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom:15px;">
+                    <div style="margin-bottom:5px;">Destination</div>
+                    <select id="destination-airport" style="width:100%; padding:5px; background:#444; color:white; border:1px solid #555;">
+                        <option>Default Airport</option>
+                        <option selected>City International</option>
+                        <option>Mountain Regional</option>
+                        <option>Coastal Airfield</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom:15px;">
+                    <div style="margin-bottom:5px;">Cruising Altitude</div>
+                    <select id="cruise-altitude" style="width:100%; padding:5px; background:#444; color:white; border:1px solid #555;">
+                        <option>1,000 ft</option>
+                        <option selected>5,000 ft</option>
+                        <option>10,000 ft</option>
+                        <option>15,000 ft</option>
+                    </select>
+                </div>
+                
+                <button id="activate-flight-plan" style="width:100%; padding:10px; background:#4CAF50; color:white; border:none; cursor:pointer; font-family:'Arial', sans-serif;">
+                    Activate Flight Plan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="flying-school-button" style="position:fixed; top:10px; right:310px; background:rgba(0,0,0,0.7); color:white; padding:5px 10px; font-family:'Arial', sans-serif; cursor:pointer; z-index:100;">
+        FLYING SCHOOL
+    </div>
+
+    <div id="flying-school-panel" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:900; display:none; justify-content:center; align-items:center;">
+        <div style="width:800px; background:#333; border-radius:10px; padding:20px; color:white; font-family:'Arial', sans-serif;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <div style="font-size:20px; font-weight:bold;">Flying School</div>
+                <div id="close-flying-school" style="cursor:pointer; padding:5px 10px; background:#555; border-radius:3px;">Close</div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-bottom:20px;">
+                <div class="lesson-card" style="background:#444; padding:15px; border-radius:5px; cursor:pointer;">
+                    <div style="font-weight:bold; margin-bottom:5px;">Basic Controls</div>
+                    <div style="font-size:12px; opacity:0.8;">Learn how to control your aircraft</div>
+                </div>
+                <div class="lesson-card" style="background:#444; padding:15px; border-radius:5px; cursor:pointer;">
+                    <div style="font-weight:bold; margin-bottom:5px;">Take-Off Procedures</div>
+                    <div style="font-size:12px; opacity:0.8;">Master the art of take-off</div>
+                </div>
+                <div class="lesson-card" style="background:#444; padding:15px; border-radius:5px; cursor:pointer;">
+                    <div style="font-weight:bold; margin-bottom:5px;">Landing Techniques</div>
+                    <div style="font-size:12px; opacity:0.8;">Perfect your landings every time</div>
+                </div>
+                <div class="lesson-card" style="background:#444; padding:15px; border-radius:5px; cursor:pointer;">
+                    <div style="font-weight:bold; margin-bottom:5px;">Navigation</div>
+                    <div style="font-size:12px; opacity:0.8;">Learn to navigate using instruments</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Before initializing Three.js, check if WebGL is available
+        function checkWebGLSupport() {
+            try {
+                const canvas = document.createElement('canvas');
+                return !!(window.WebGLRenderingContext && 
+                    (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Declare these variables in global scope
+        let scene, camera, renderer, airplane, cockpitCamera;
+        let position, velocity, rotation, rotationVelocity;
+        let controls = {
+            thrust: 0,
+            pitch: 0,
+            roll: 0,
+            yaw: 0
+        };
+        let weatherSystem, timeSystem, autopilot;
+        let useThirdPersonView = true;
+        let animationFrameId;
+        let clouds, sky, skyMaterial;
+        
+        // Helper function to safely update DOM elements
+        function safelyUpdateElement(id, updateFunction) {
+            const element = document.getElementById(id);
+            if (element) {
+                updateFunction(element);
+            }
+        }
+        
+        // Notification system
+        function showGeoFSNotification(message, duration = 2000) {
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.top = '50px';
+            notification.style.left = '50%';
+            notification.style.transform = 'translateX(-50%)';
+            notification.style.background = 'rgba(0,0,0,0.7)';
+            notification.style.color = 'white';
+            notification.style.padding = '10px 20px';
+            notification.style.borderRadius = '5px';
+            notification.style.fontFamily = 'Arial, sans-serif';
+            notification.style.zIndex = '1000';
+            notification.style.textAlign = 'center';
+            notification.innerText = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, duration);
+        }
+        
+        // Animation function
+        function animate() {
+            animationFrameId = requestAnimationFrame(animate);
+            
+            try {
+                // First ensure all required objects are defined
+                if (!position || !velocity || !rotation || !rotationVelocity) {
+                    console.error("Physics objects not initialized");
+                    return;
+                }
+
+                // Update weather and time systems
+                if (weatherSystem) weatherSystem.updateWeather();
+                if (timeSystem) timeSystem.updateLighting();
+                
+                // Update autopilot if active
+                if (autopilot && autopilot.active) {
+                    autopilot.update();
+                }
+                
+                // Apply physics - these were missing before
+                // Update rotation based on controls
+                rotationVelocity.x += controls.pitch * 0.003;
+                rotationVelocity.y += controls.yaw * 0.003;
+                rotationVelocity.z += controls.roll * 0.003;
+                
+                // Apply damping to rotation
+                rotationVelocity.x *= 0.95;
+                rotationVelocity.y *= 0.95;
+                rotationVelocity.z *= 0.95;
+                
+                // Update rotation
+                rotation.x += rotationVelocity.x;
+                rotation.y += rotationVelocity.y;
+                rotation.z += rotationVelocity.z;
+                
+                // Calculate forward direction based on rotation
+                const forward = new THREE.Vector3(0, 0, 1);
+                forward.applyEuler(rotation);
+                
+                // Update velocity based on thrust and direction
+                const acceleration = forward.multiplyScalar(controls.thrust * 0.1);
+                velocity.add(acceleration);
+                
+                // Apply gravity (pulling down on Y axis)
+                velocity.y -= 0.02; // Simplified gravity
+                
+                // Apply drag (air resistance)
+                velocity.multiplyScalar(0.99);
+                
+                // Update position based on velocity
+                position.add(velocity);
+                
+                // Prevent crashing below ground level (basic collision)
+                if (position.y < 5) {
+                    position.y = 5;
+                    velocity.y = Math.max(0, velocity.y);
+                }
+                
+                // Update airplane mesh
+                if (airplane) {
+                    airplane.position.copy(position);
+                    airplane.rotation.copy(rotation);
+                    
+                    // Animate propeller if thrust is applied
+                    if (airplane.propeller) {
+                        airplane.propeller.rotation.x += controls.thrust * 0.5;
+                    }
+                }
+                
+                // Update camera to follow airplane in third-person view
+                if (useThirdPersonView) {
+                    const cameraOffset = new THREE.Vector3(-30, 15, -60); // Behind and above aircraft
+                    cameraOffset.applyEuler(rotation);
+                    camera.position.copy(position).add(cameraOffset);
+                    camera.lookAt(position);
+                } else {
+                    // Cockpit view
+                    const cockpitOffset = new THREE.Vector3(0, 1.5, 2); // Slightly forward of center
+                    cockpitOffset.applyEuler(rotation);
+                    cockpitCamera.position.copy(position).add(cockpitOffset);
+                    
+                    const lookDirection = new THREE.Vector3(0, 0, 10);
+                    lookDirection.applyEuler(rotation);
+                    cockpitCamera.lookAt(position.clone().add(lookDirection));
+                }
+                
+                // Update HUD elements with flight data
+                safelyUpdateElement('speed', el => el.textContent = Math.round(velocity.length() * 1.94384)); // m/s to knots
+                safelyUpdateElement('altitude', el => el.textContent = Math.round(position.y * 3.28084)); // meters to feet
+                safelyUpdateElement('heading', el => el.textContent = Math.round((rotation.y * 180 / Math.PI + 360) % 360));
+                safelyUpdateElement('lon', el => el.textContent = (position.x / 1000).toFixed(3));
+                safelyUpdateElement('lat', el => el.textContent = (position.z / 1000).toFixed(3));
+                
+                // Update instrument displays
+                safelyUpdateElement('vertical-speed', el => el.textContent = Math.round(velocity.y * 196.85)); // m/s to ft/min
+                safelyUpdateElement('indicated-airspeed', el => el.textContent = Math.round(velocity.length() * 1.94384));
+                safelyUpdateElement('ground-speed', el => el.textContent = Math.round(new THREE.Vector3(velocity.x, 0, velocity.z).length() * 1.94384));
+                safelyUpdateElement('pitch-value', el => el.textContent = Math.round(rotation.x * 180 / Math.PI));
+                safelyUpdateElement('roll-value', el => el.textContent = Math.round(rotation.z * 180 / Math.PI));
+                safelyUpdateElement('thrust-value', el => el.textContent = Math.round(controls.thrust * 100));
+                
+                // Update airspeed indicator
+                safelyUpdateElement('airspeed-needle', el => {
+                    const speed = velocity.length() * 1.94384;
+                    const needleRotation = Math.min(speed, 160) / 160 * 320 - 160; // 320 degree rotation range
+                    el.style.transform = `rotate(${needleRotation}deg) translateY(45px)`;
+                });
+                
+                // Update altitude indicator
+                safelyUpdateElement('altitude-needle', el => {
+                    const altitude = position.y * 3.28084;
+                    const needleRotation = (altitude % 1000) / 1000 * 360; // One full rotation per 1000ft
+                    el.style.transform = `rotate(${needleRotation}deg) translateY(45px)`;
+                });
+                
+                // Update artificial horizon
+                const horizonElement = document.querySelector('.horizon-line');
+                if (horizonElement) {
+                    const pitchPixels = -rotation.x * 180 / Math.PI * 2; // 2 pixels per degree
+                    const rollDeg = rotation.z * 180 / Math.PI;
+                    horizonElement.style.transform = `translateY(${pitchPixels}px) rotate(${-rollDeg}deg)`;
+                }
+                
+                // Update compass
+                const compassArrow = document.querySelector('.compass-arrow');
+                if (compassArrow) {
+                    const headingDeg = (rotation.y * 180 / Math.PI + 360) % 360;
+                    compassArrow.style.transform = `rotate(${headingDeg}deg)`;
+                }
+                
+                // Map update
+                if (document.getElementById('map-overlay').style.display === 'flex') {
+                    updateMap();
+                }
+                
+                // Render the scene
+                if (renderer && scene && camera) {
+                    renderer.render(scene, useThirdPersonView ? camera : cockpitCamera);
+                }
+                
+            } catch (error) {
+                console.error("Animation error:", error);
+                // Emergency reset if something goes wrong
+                if (position) position.set(0, 100, 0);
+                if (velocity) velocity.set(0, 0, 20);
+                if (rotation) rotation.set(0, 0, 0);
+                if (rotationVelocity) rotationVelocity.set(0, 0, 0);
+            }
+        }
+        
+        // Troubleshoot rendering
+        function troubleshootRendering() {
+            console.log("Troubleshooting rendering issues...");
+            
+            if (!renderer || !scene || !camera || !airplane) {
+                console.error("Required objects not initialized!");
+                showGeoFSNotification("Could not fix rendering - missing objects", 3000);
+                return;
+            }
+            
+            // Force renderer to clear
+            renderer.setClearColor(0x87CEEB, 1);
+            renderer.clear();
+            
+            // Reset camera position
+            camera.position.set(0, 100, 100);
+            camera.lookAt(0, 0, 0);
+            
+            // Reset airplane position
+            airplane.position.set(0, 50, 0);
+            
+            // Try a simple render
+            renderer.render(scene, camera);
+            
+            // Reset animation loop
+            cancelAnimationFrame(animationFrameId);
+            animate();
+            
+            showGeoFSNotification("Rendering system reset", 3000);
+        }
+        
+        // Map update function
+        function updateMap() {
+            if (!position || !rotation) return;
+            
+            // Update plane position on map
+            const mapPlane = document.getElementById('map-plane');
+            if (mapPlane) {
+                // Convert world coordinates to map coordinates
+                // Reduce map scale for larger world
+                const mapScale = 0.002;
+                const mapCenterX = 50;
+                const mapCenterY = 50;
+                
+                const mapX = mapCenterX + position.x * mapScale;
+                const mapY = mapCenterY + position.z * mapScale;
+                
+                mapPlane.style.left = mapX + '%';
+                mapPlane.style.top = mapY + '%';
+                
+                // Rotate the plane icon to match heading
+                const headingDegrees = (rotation.y * 180 / Math.PI + 360) % 360;
+                mapPlane.style.transform = `translate(-50%, -50%) rotate(${headingDegrees}deg)`;
+            }
+        }
+        
+        // Create terrain
+        function createTerrain() {
+            const size = 100;
+            const heightMap = [];
+            
+            // World size - increase from 20000 to 100000
+            const worldSize = 100000;
+            
+            // Generate height map with mountains and valleys
+            for (let i = 0; i <= size; i++) {
+                heightMap[i] = [];
+                for (let j = 0; j <= size; j++) {
+                    // Complex terrain generation
+                    let height = 0;
+                    
+                    // Mountain ranges - amplify for more dramatic terrain
+                    const mountain1 = 200 * Math.pow(Math.sin(i/5) * Math.cos(j/5), 2);
+                    const mountain2 = 80 * Math.sin(i/10) * Math.cos(j/8);
+                    
+                    // Plains - make wider
+                    const plains = 20 * Math.sin(i/40) * Math.sin(j/40);
+                    
+                    // Combine features
+                    height = mountain1 + mountain2 + plains;
+                    
+                    // Add noise
+                    height += Math.random() * 10;
+                    
+                    // Ensure minimum height
+                    height = Math.max(height, -40);
+                    
+                    heightMap[i][j] = height;
+                }
+            }
+            
+            // Create geometry from height map
+            const geometry = new THREE.PlaneGeometry(worldSize, worldSize, size, size);
+            const vertices = geometry.attributes.position.array;
+            
+            for (let i = 0; i <= size; i++) {
+                for (let j = 0; j <= size; j++) {
+                    const index = 3 * (i * (size + 1) + j) + 1;
+                    vertices[index] = heightMap[i][j];
+                }
+            }
+            
+            geometry.computeVertexNormals();
+            
+            // Create terrain materials
+            const groundMaterial = new THREE.MeshPhongMaterial({
+                color: 0x3d8c40,
+                shininess: 0,
+                flatShading: false
+            });
+            
+            const waterMaterial = new THREE.MeshPhongMaterial({
+                color: 0x0077be,
+                transparent: true,
+                opacity: 0.8,
+                shininess: 30
+            });
+            
+            // Main terrain
+            const terrain = new THREE.Mesh(geometry, groundMaterial);
+            terrain.rotation.x = -Math.PI / 2;
+            terrain.castShadow = true;
+            terrain.receiveShadow = true;
+            
+            // Create water plane
+            const waterGeometry = new THREE.PlaneGeometry(worldSize, worldSize);
+            const water = new THREE.Mesh(waterGeometry, waterMaterial);
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -15; // Water level
+            
+            const terrainGroup = new THREE.Group();
+            terrainGroup.add(terrain);
+            terrainGroup.add(water);
+            
+            return terrainGroup;
+        }
+
+        // Create airplane
+        function createAirplane() {
+            const airplane = new THREE.Group();
+            
+            // Fuselage
+            const fuselageGeometry = new THREE.CylinderGeometry(1, 0.8, 10, 12);
+            fuselageGeometry.rotateZ(Math.PI / 2);
+            const fuselageMaterial = new THREE.MeshPhongMaterial({
+                color: 0xf0f0f0,
+                shininess: 100
+            });
+            const fuselage = new THREE.Mesh(fuselageGeometry, fuselageMaterial);
+            fuselage.castShadow = true;
+            airplane.add(fuselage);
+            
+            // Main Wings
+            const wingShape = new THREE.Shape();
+            wingShape.moveTo(0, 0);
+            wingShape.bezierCurveTo(0, 0, 5, -0.5, 8, -2);
+            wingShape.lineTo(8, -0.5);
+            wingShape.bezierCurveTo(8, 0, 5, 0.5, 0, 0);
+            
+            const wingExtrudeSettings = {
+                steps: 1,
+                depth: 0.2,
+                bevelEnabled: true,
+                bevelThickness: 0.1,
+                bevelSize: 0.1,
+                bevelOffset: 0,
+                bevelSegments: 3
+            };
+            
+            const wingGeometry = new THREE.ExtrudeGeometry(wingShape, wingExtrudeSettings);
+            const wingMaterial = new THREE.MeshPhongMaterial({
+                color: 0xf0f0f0,
+                shininess: 100
+            });
+            
+            const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
+            leftWing.position.set(-0.1, 0, 0);
+            leftWing.castShadow = true;
+            leftWing.receiveShadow = true;
+            airplane.add(leftWing);
+            
+            const rightWing = leftWing.clone();
+            rightWing.scale.x = -1;
+            rightWing.position.set(0.1, 0, 0);
+            airplane.add(rightWing);
+            
+            // Tail
+            const tailFinGeometry = new THREE.BoxGeometry(0.2, 2, 1.5);
+            const tailFin = new THREE.Mesh(tailFinGeometry, wingMaterial);
+            tailFin.position.set(0, 1, -4);
+            tailFin.castShadow = true;
+            airplane.add(tailFin);
+            
+            // Horizontal Stabilizers
+            const stabilizerGeometry = new THREE.BoxGeometry(3, 0.2, 1);
+            const leftStabilizer = new THREE.Mesh(stabilizerGeometry, wingMaterial);
+            leftStabilizer.position.set(-1.5, 0.5, -4);
+            leftStabilizer.castShadow = true;
+            airplane.add(leftStabilizer);
+            
+            const rightStabilizer = leftStabilizer.clone();
+            rightStabilizer.position.set(1.5, 0.5, -4);
+            airplane.add(rightStabilizer);
+            
+            // Propeller
+            const propellerGroup = new THREE.Group();
+            const propGeometry = new THREE.BoxGeometry(6, 0.2, 0.5);
+            const propMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            const propeller = new THREE.Mesh(propGeometry, propMaterial);
+            propeller.castShadow = true;
+            propellerGroup.add(propeller);
+            
+            const hubGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+            const hubMaterial = new THREE.MeshPhongMaterial({ color: 0x777777 });
+            const hub = new THREE.Mesh(hubGeometry, hubMaterial);
+            hub.castShadow = true;
+            propellerGroup.add(hub);
+            
+            propellerGroup.position.set(0, 0, 5);
+            airplane.add(propellerGroup);
+            
+            // Cockpit
+            const cockpitGeometry = new THREE.SphereGeometry(1, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const cockpitMaterial = new THREE.MeshPhongMaterial({
+                color: 0x6495ED,
+                transparent: true,
+                opacity: 0.7,
+                shininess: 100
+            });
+            const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
+            cockpit.position.set(0, 0.5, 2);
+            cockpit.castShadow = true;
+            airplane.add(cockpit);
+            
+            // Landing gear
+            const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
+            wheelGeometry.rotateX(Math.PI / 2);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            
+            const leftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            leftWheel.position.set(-1.5, -1, 1);
+            leftWheel.castShadow = true;
+            airplane.add(leftWheel);
+            
+            const rightWheel = leftWheel.clone();
+            rightWheel.position.set(1.5, -1, 1);
+            airplane.add(rightWheel);
+            
+            const tailWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            tailWheel.scale.set(0.5, 0.5, 0.5);
+            tailWheel.position.set(0, -0.8, -4);
+            airplane.add(tailWheel);
+            
+            // Store propeller reference for animation
+            airplane.propeller = propellerGroup;
+            
+            return airplane;
+        }
+        
+        // Main initialization
+        function initFlightSimulator() {
+            try {
+                // Initialize Three.js
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 50000);
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0x87CEEB, 1);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                document.body.appendChild(renderer.domElement);
+                
+                // Initialize the physics variables that were missing
+                position = new THREE.Vector3(0, 100, 0);
+                velocity = new THREE.Vector3(0, 0, 20);
+                rotation = new THREE.Euler(0, 0, 0, 'YXZ');
+                rotationVelocity = new THREE.Vector3(0, 0, 0);
+
+                // Create sky - increase sky size to match larger world
+                sky = new THREE.Mesh(
+                    new THREE.SphereGeometry(120000, 32, 32),
+                    skyMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x87CEEB,
+                        side: THREE.BackSide
+                    })
+                );
+                scene.add(sky);
+
+                // Add clouds - spread them out over a larger area
+                clouds = new THREE.Group();
+                const cloudGeometry = new THREE.SphereGeometry(50, 16, 16);
+                const cloudMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.8
+                });
+
+                for (let i = 0; i < 200; i++) {  // Increase number of clouds
+                    const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                    cloud.position.set(
+                        Math.random() * 10000 - 5000,  // Spread clouds wider
+                        Math.random() * 500 + 300,     // Higher cloud ceiling
+                        Math.random() * 10000 - 5000   // Spread clouds wider
+                    );
+                    cloud.scale.set(
+                        Math.random() * 3 + 2,  // Make clouds larger
+                        0.5,
+                        Math.random() * 3 + 2
+                    );
+                    clouds.add(cloud);
+                }
+                scene.add(clouds);
+
+                // Add terrain
+                const terrain = createTerrain();
+                scene.add(terrain);
+
+                // Create airplane
+                airplane = createAirplane();
+                scene.add(airplane);
+
+                // Cockpit camera
+                cockpitCamera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 50000);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(ambientLight);
+
+                const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+                sunLight.position.set(500, 500, 0);
+                sunLight.castShadow = true;
+                sunLight.shadow.mapSize.width = 2048;
+                sunLight.shadow.mapSize.height = 2048;
+                sunLight.shadow.camera.near = 0.5;
+                sunLight.shadow.camera.far = 5000;
+                sunLight.shadow.camera.left = -2500;
+                sunLight.shadow.camera.right = 2500;
+                sunLight.shadow.camera.top = 2500;
+                sunLight.shadow.camera.bottom = -2500;
+                scene.add(sunLight);
+
+                // Define physics parameters
+                const gravity = 9.8;
+                const mass = 400;
+                const wingArea = 40;
+                const dragCoefficient = 0.015;
+                const liftCoefficient = 0.8;
+                const airDensity = 1.225;
+                const stallAngle = 30 * (Math.PI / 180);
+
+                // Initialize weather system
+                weatherSystem = {
+                    cloudCover: 0.3,
+                    windSpeed: 5,
+                    windDirection: Math.PI / 4,
+                    turbulence: 0.1,
+                    visibility: 10000,
+                    
+                    updateWeather: function() {
+                        // Update cloud visibility based on cloud cover
+                        if (clouds && clouds.children) {
+                            clouds.children.forEach(cloud => {
+                                cloud.material.opacity = 0.7 * this.cloudCover + 0.1;
+                            });
+                        }
+                        
+                        // Add wind effect to aircraft
+                        if (velocity) {
+                            const windVector = new THREE.Vector3(
+                                Math.sin(this.windDirection) * this.windSpeed,
+                                0,
+                                Math.cos(this.windDirection) * this.windSpeed
+                            );
+                            
+                            velocity.add(windVector.multiplyScalar(0.01));
+                        }
+                        
+                        // Apply turbulence
+                        if (rotationVelocity && this.turbulence > 0) {
+                            const turbulenceForce = new THREE.Vector3(
+                                (Math.random() - 0.5) * this.turbulence,
+                                (Math.random() - 0.5) * this.turbulence,
+                                (Math.random() - 0.5) * this.turbulence
+                            );
+                            rotationVelocity.add(turbulenceForce.multiplyScalar(0.01));
+                        }
+                        
+                        // Update fog based on visibility
+                        if (scene) {
+                            const fogDensity = 1 - (this.visibility / 15000);
+                            scene.fog = new THREE.FogExp2(0xafc5e3, Math.max(0, Math.min(0.0001, fogDensity * 0.0001)));
+                        }
+                    }
+                };
+
+                // Initialize time system
+                timeSystem = {
+                    hour: 12,
+                    
+                    updateLighting: function() {
+                        if (!sunLight || !skyMaterial || !ambientLight) return;
+                        
+                        // Calculate sun position based on time
+                        const sunAngle = ((this.hour - 12) / 12) * Math.PI;
+                        const sunHeight = Math.cos(sunAngle);
+                        
+                        sunLight.position.set(
+                            500 * Math.sin(sunAngle),
+                            500 * sunHeight,
+                            500 * Math.cos(sunAngle)
+                        );
+                        
+                        // Update sky color based on time
+                        let skyColor;
+                        if (this.hour >= 6 && this.hour <= 18) {
+                            // Daytime - blue sky
+                            skyColor = new THREE.Color(0x87CEEB);
+                        } else if (this.hour > 18 && this.hour <= 20) {
+                            // Sunset - orange sky
+                            skyColor = new THREE.Color(0xFFA07A);
+                        } else if (this.hour > 4 && this.hour < 6) {
+                            // Sunrise - pink-ish sky
+                            skyColor = new THREE.Color(0xFFB6C1);
+                        } else {
+                            // Night - dark blue sky
+                            skyColor = new THREE.Color(0x0A1020);
+                        }
+                        
+                        // Apply sky color
+                        skyMaterial.color = skyColor;
+                        
+                        // Adjust light intensity based on time
+                        let lightIntensity;
+                        if (this.hour >= 8 && this.hour <= 16) {
+                            lightIntensity = 1.0;
+                        } else if (this.hour >= 6 && this.hour < 8) {
+                            lightIntensity = (this.hour - 6) / 2;
+                        } else if (this.hour > 16 && this.hour <= 18) {
+                            lightIntensity = 1 - ((this.hour - 16) / 2);
+                        } else if (this.hour > 18 && this.hour <= 20) {
+                            lightIntensity = 0.3 - ((this.hour - 18) / 2) * 0.3;
+                        } else {
+                            lightIntensity = 0;
+                        }
+                        
+                        sunLight.intensity = lightIntensity;
+                        ambientLight.intensity = 0.2 + lightIntensity * 0.3;
+                    }
+                };
+
+                // Initialize autopilot
+                autopilot = {
+                    active: false,
+                    targetAltitude: 1000,
+                    targetHeading: 0,
+                    targetSpeed: 120,
+                    
+                    activate: function() {
+                        this.active = true;
+                        this.targetAltitude = Math.round(position.y * 3.28084 / 100) * 100;
+                        this.targetHeading = Math.round((rotation.y * 180 / Math.PI + 360) % 360);
+                        this.targetSpeed = Math.round(velocity.length() * 1.94384);
+                        showGeoFSNotification(`Autopilot engaged: ALT ${this.targetAltitude}ft, HDG ${this.targetHeading}°`, 3000);
+                    },
+                    
+                    deactivate: function() {
+                        this.active = false;
+                        showGeoFSNotification('Autopilot disengaged', 3000);
+                    },
+                    
+                    toggle: function() {
+                        if (this.active) {
+                            this.deactivate();
+                        } else {
+                            this.activate();
+                        }
+                    },
+                    
+                    update: function() {
+                        if (!this.active || !position || !rotation || !velocity) return;
+                        
+                        const targetAltitudeMeters = this.targetAltitude / 3.28084;
+                        const altitudeError = targetAltitudeMeters - position.y;
+                        const pitchCommand = Math.max(-0.3, Math.min(0.3, altitudeError * 0.01));
+                        
+                        let currentHeading = (rotation.y * 180 / Math.PI + 360) % 360;
+                        let headingError = this.targetHeading - currentHeading;
+                        
+                        if (headingError > 180) headingError -= 360;
+                        if (headingError < -180) headingError += 360;
+                        
+                        const rollCommand = Math.max(-0.3, Math.min(0.3, headingError * 0.02));
+                        const currentSpeed = velocity.length() * 1.94384;
+                        const speedError = this.targetSpeed - currentSpeed;
+                        const thrustCommand = Math.max(0.1, Math.min(1.0, 0.5 + speedError * 0.01));
+                        
+                        if (Math.abs(pitchCommand) > 0.05) {
+                            rotation.x += (pitchCommand - rotation.x) * 0.05;
+                        }
+                        
+                        if (Math.abs(rollCommand) > 0.05) {
+                            rotation.z += (rollCommand - rotation.z) * 0.05;
+                        }
+                        
+                        controls.thrust = thrustCommand;
+                    }
+                };
+
+                // Initialize fog
+                scene.fog = new THREE.FogExp2(0xafc5e3, 0.00005);
+
+                // Setup cockpit view toggle
+                document.getElementById('viewToggle').addEventListener('click', () => {
+                    useThirdPersonView = !useThirdPersonView;
+                    document.getElementById('viewToggle').textContent = 
+                        useThirdPersonView ? 'Switch to Cockpit View' : 'Switch to Third Person View';
+                    document.getElementById('cockpitFrame').style.display = 
+                        useThirdPersonView ? 'none' : 'block';
+                });
+
+                // Key event handlers
+                document.addEventListener('keydown', (event) => {
+                    switch(event.key) {
+                        case 'ArrowUp': controls.pitch = 1; break;
+                        case 'ArrowDown': controls.pitch = -1; break;
+                        case 'ArrowLeft': controls.roll = -1; break;
+                        case 'ArrowRight': controls.roll = 1; break;
+                        case 'a': controls.yaw = -1; break;
+                        case 'd': controls.yaw = 1; break;
+                        case '0': controls.thrust = 0; break;
+                        case '1': controls.thrust = 0.1; break;
+                        case '2': controls.thrust = 0.2; break;
+                        case '3': controls.thrust = 0.3; break;
+                        case '4': controls.thrust = 0.4; break;
+                        case '5': controls.thrust = 0.5; break;
+                        case '6': controls.thrust = 0.6; break;
+                        case '7': controls.thrust = 0.7; break;
+                        case '8': controls.thrust = 0.8; break;
+                        case '9': controls.thrust = 1.0; break;
+                        case 'l': 
+                            rotation.x = 0;
+                            rotation.z = 0;
+                            rotationVelocity.x = 0;
+                            rotationVelocity.z = 0;
+                            break;
+                        case 'r': 
+                            position.set(0, 100, 0);
+                            velocity.set(0, 0, 20);
+                            rotation.set(0, 0, 0);
+                            rotationVelocity.set(0, 0, 0);
+                            break;
+                    }
+                });
+
+                document.addEventListener('keyup', (event) => {
+                    switch(event.key) {
+                        case 'ArrowUp':
+                        case 'ArrowDown': controls.pitch = 0; break;
+                        case 'ArrowLeft':
+                        case 'ArrowRight': controls.roll = 0; break;
+                        case 'a':
+                        case 'd': controls.yaw = 0; break;
+                    }
+                });
+
+                // Setup other UI event handlers
+                document.getElementById('close-map').addEventListener('click', () => {
+                    document.getElementById('map-overlay').style.display = 'none';
+                });
+
+                document.getElementById('settings-button').addEventListener('click', () => {
+                    document.getElementById('settings-panel').style.display = 'flex';
+                });
+
+                document.getElementById('close-settings').addEventListener('click', () => {
+                    document.getElementById('settings-panel').style.display = 'none';
+                });
+
+                document.getElementById('time-slider').addEventListener('input', (e) => {
+                    const hour = parseInt(e.target.value);
+                    if (timeSystem) timeSystem.hour = hour;
+                    const displayHour = hour.toString().padStart(2, '0');
+                    document.getElementById('time-display').textContent = `${displayHour}:00`;
+                });
+
+                document.getElementById('weather-select').addEventListener('change', (e) => {
+                    if (!weatherSystem) return;
+                    
+                    switch(e.target.value) {
+                        case 'clear':
+                            weatherSystem.cloudCover = 0.1;
+                            weatherSystem.turbulence = 0;
+                            weatherSystem.visibility = 15000;
+                            break;
+                        case 'scattered':
+                            weatherSystem.cloudCover = 0.4;
+                            weatherSystem.turbulence = 0.1;
+                            weatherSystem.visibility = 10000;
+                            break;
+                        case 'overcast':
+                            weatherSystem.cloudCover = 0.8;
+                            weatherSystem.turbulence = 0.2;
+                            weatherSystem.visibility = 5000;
+                            break;
+                        case 'stormy':
+                            weatherSystem.cloudCover = 1.0;
+                            weatherSystem.turbulence = 0.5;
+                            weatherSystem.visibility = 2000;
+                            showGeoFSNotification('Stormy weather activated', 3000);
+                            break;
+                    }
+                });
+
+                document.getElementById('flight-plan-button').addEventListener('click', () => {
+                    document.getElementById('flight-plan-panel').style.display = 'flex';
+                });
+
+                document.getElementById('close-flight-plan').addEventListener('click', () => {
+                    document.getElementById('flight-plan-panel').style.display = 'none';
+                });
+
+                document.getElementById('flying-school-button').addEventListener('click', () => {
+                    document.getElementById('flying-school-panel').style.display = 'flex';
+                });
+
+                document.getElementById('close-flying-school').addEventListener('click', () => {
+                    document.getElementById('flying-school-panel').style.display = 'none';
+                });
+
+                document.getElementById('autopilotBtn').addEventListener('click', () => {
+                    if (autopilot) autopilot.toggle();
+                });
+
+                document.getElementById('mapBtn').addEventListener('click', () => {
+                    document.getElementById('map-overlay').style.display = 'flex';
+                    updateMap();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    if (position && velocity && rotation && rotationVelocity) {
+                        position.set(0, 100, 0);
+                        velocity.set(0, 0, 20);
+                        rotation.set(0, 0, 0);
+                        rotationVelocity.set(0, 0, 0);
+                        showGeoFSNotification('Aircraft position reset', 2000);
+                    }
+                });
+
+                document.getElementById('activate-flight-plan').addEventListener('click', () => {
+                    if (!autopilot) return;
+                    
+                    const departure = document.getElementById('departure-airport').value;
+                    const destination = document.getElementById('destination-airport').value;
+                    const altitude = document.getElementById('cruise-altitude').value;
+                    
+                    showGeoFSNotification(`Flight plan activated: ${departure} to ${destination} at ${altitude}`, 4000);
+                    
+                    const altValue = parseInt(altitude.replace(/[^\d]/g, ''));
+                    autopilot.targetAltitude = altValue;
+                    autopilot.active = true;
+                    
+                    document.getElementById('flight-plan-panel').style.display = 'none';
+                });
+
+                document.querySelectorAll('.lesson-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        document.getElementById('flying-school-panel').style.display = 'none';
+                        showGeoFSNotification('Starting lesson...', 2000);
+                        const lessonTitle = card.querySelector('div:first-child').textContent;
+                        setTimeout(() => {
+                            showGeoFSNotification(`Lesson: ${lessonTitle} - Follow the on-screen instructions`, 4000);
+                        }, 2500);
+                    });
+                });
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (camera && renderer && cockpitCamera) {
+                        camera.aspect = window.innerWidth / window.innerHeight;
+                        camera.updateProjectionMatrix();
+                        
+                        cockpitCamera.aspect = window.innerWidth / window.innerHeight;
+                        cockpitCamera.updateProjectionMatrix();
+                        
+                        renderer.setSize(window.innerWidth, window.innerHeight);
+                    }
+                });
+
+                // After initializing position
+                camera.position.set(0, 120, 100); // Position the camera behind and above the starting position
+                camera.lookAt(position);
+
+                // Start animation
+                animate();
+                
+                console.log("Flight simulator initialized successfully");
+                
+            } catch (error) {
+                console.error("Failed to initialize flight simulator:", error);
+                document.body.innerHTML = `
+                    <div style="position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#333; color:white; font-family:Arial, sans-serif;">
+                        <h1>Flight Simulator Error</h1>
+                        <p>Failed to initialize the 3D renderer: ${error.message}</p>
+                        <p>This might be due to:</p>
+                        <ul>
+                            <li>WebGL not supported by your browser</li>
+                            <li>Hardware acceleration disabled</li>
+                            <li>Outdated graphics drivers</li>
+                        </ul>
+                        <button onclick="location.reload()" style="padding:10px 20px; margin-top:20px; background:#4CAF50; color:white; border:none; cursor:pointer;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Start everything when the page is loaded
+        if (checkWebGLSupport()) {
+            window.addEventListener('load', () => {
+                const loadingBar = document.getElementById('loading-bar');
+                const loadingText = document.getElementById('loading-text');
+                const loadingScreen = document.getElementById('loading-screen');
+                const mainMenu = document.getElementById('main-menu');
+                
+                let progress = 0;
+                const loadingInterval = setInterval(() => {
+                    progress += Math.random() * 5;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(loadingInterval);
+                        
+                        loadingText.textContent = "Ready to fly!";
+                        setTimeout(() => {
+                            loadingScreen.style.opacity = "0";
+                            loadingScreen.style.transition = "opacity 1s";
+                            
+                            setTimeout(() => {
+                                loadingScreen.style.display = "none";
+                                mainMenu.style.display = "flex";
+                                
+                                // Setup menu interactions
+                                document.getElementById('aircraft-select').addEventListener('click', () => {
+                                    const aircraftOptions = [
+                                        "Cessna 172", 
+                                        "Boeing 737", 
+                                        "Fighter Jet", 
+                                        "Helicopter"
+                                    ];
+                                    
+                                    const currentAircraft = document.getElementById('aircraft-select').textContent.trim();
+                                    const currentIndex = aircraftOptions.indexOf(currentAircraft);
+                                    const nextIndex = (currentIndex + 1) % aircraftOptions.length;
+                                    
+                                    document.getElementById('aircraft-select').textContent = aircraftOptions[nextIndex];
+                                    showGeoFSNotification(`Selected aircraft: ${aircraftOptions[nextIndex]}`, 2000);
+                                });
+                                
+                                document.getElementById('location-select').addEventListener('click', () => {
+                                    const locationOptions = [
+                                        "Default Airport", 
+                                        "City International", 
+                                        "Mountain Regional", 
+                                        "Coastal Airfield"
+                                    ];
+                                    
+                                    const currentLocation = document.getElementById('location-select').textContent.trim();
+                                    const currentIndex = locationOptions.indexOf(currentLocation);
+                                    const nextIndex = (currentIndex + 1) % locationOptions.length;
+                                    
+                                    document.getElementById('location-select').textContent = locationOptions[nextIndex];
+                                    showGeoFSNotification(`Selected location: ${locationOptions[nextIndex]}`, 2000);
+                                });
+                                
+                                document.getElementById('fly-button').addEventListener('click', () => {
+                                    mainMenu.style.display = "none";
+                                    showGeoFSNotification('Loading flight...', 2000);
+                                    setTimeout(() => {
+                                        // Initialize the flight simulator when the "Fly Now" button is clicked
+                                        initFlightSimulator();
+                                        showGeoFSNotification('Ready to fly!', 2000);
+                                    }, 2000);
+                                });
+                            }, 1000);
+                        }, 500);
+                    }
+                    loadingBar.style.width = `${progress}%`;
+                    loadingText.textContent = `Loading world... ${Math.floor(progress)}%`;
+                }, 100);
+                
+                // Set a timeout to force-show the main menu if loading gets stuck
+                setTimeout(() => {
+                    if (loadingScreen.style.display !== 'none') {
+                        clearInterval(loadingInterval);
+                        loadingScreen.style.display = 'none';
+                        mainMenu.style.display = 'flex';
+                        console.log("Force-showing main menu after timeout");
+                    }
+                }, 10000); // 10 seconds timeout
+            });
+        }
+    </script>
+</body>
+</html>
