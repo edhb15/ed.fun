@@ -44,6 +44,17 @@
                 margin-top: 20px;
                 margin-right: 10px;
             }
+            .button3 {
+                height: 50px; 
+                background-image: url('unknown.jpg');
+                background-size: cover; 
+                background-position: center; 
+                border: 1px solid #000
+                cursor: pointer;
+                width: 100px;
+                margin-top: 20px;
+                margin-right: 10px;
+            }
 
 
             #div2 {
@@ -58,7 +69,8 @@
         </div>
         <div id="div2">
             <button class="button1" id="button1" onclick="open_polytrack()"></button>
-            <button class="button1" id="button2" onclick="flightsimulator()"></button>
+            <button class="button2" id="button2" onclick="flightsimulator()"></button>
+            <button class="button3" id="button3" onclick="enigmamachine()"></button>
         </div>
         <script>
             function open_polytrack() {
@@ -66,6 +78,9 @@
             }
             function flightsimulator() {
                 window.location.href = "BASIC-FLIGHT-SIMULATOR.html";
+            }
+            function enigmamachine() {
+                window.location.href = "encryption.html";
             }
         </script>
     </body>
