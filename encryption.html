@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>enigma machine simulator</title>
+    <!-- Corrected CryptoJS CDN link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+</head>
+<body>
+    <h1>enigma machine</h1>
+
+    <!-- Input field for text to encrypt -->
+    <input type="text" id="textToEncrypt" placeholder="Enter text to encrypt">
+    <button onclick="encryptData()">Encrypt</button>
+    <p id="encryptedData"></p>
+
+    <!-- Input field for encrypted text -->
+    <input type="text" id="encryptedText" placeholder="Enter encrypted text">
+    <button onclick="decryptData()">Decrypt</button>
+    <p id="decryptedData"></p>
+
+    <script>
+        // Encryption function
+        function encryptData() {
+            // Get the text to encrypt
+            var text = document.getElementById('textToEncrypt').value;
+
+            // Encrypt the text with a secret key (AES encryption)
+            var encrypted = CryptoJS.AES.encrypt(text, 'secret-key').toString();
+
+            // Display the encrypted text
+            document.getElementById('encryptedData').textContent = "Encrypted: " + encrypted;
+        }
+
+        // Decryption function
+        function decryptData() {
+            // Get the encrypted text from the input field
+            var encryptedText = document.getElementById('encryptedText').value;
+
+            // Ensure the encrypted text is not empty
+            if (!encryptedText) {
+                alert("Please enter the encrypted text!");
+                return;
+            }
+
+            try {
+                // Decrypt the text using the same secret key
+                var decrypted = CryptoJS.AES.decrypt(encryptedText, 'secret-key');
+                var originalText = decrypted.toString(CryptoJS.enc.Utf8);
+
+                // Check if decryption succeeded
+                if (originalText) {
+                    document.getElementById('decryptedData').textContent = "Decrypted: " + originalText;
+                } else {
+                    alert("Decryption failed: Invalid input or wrong key.");
+                    document.getElementById('decryptedData').textContent = "Decryption failed!";
+                }
+            } catch (error) {
+                // Catch any errors during decryption
+                console.error("Decryption error:", error);
+                alert("Error during decryption. Check if the encrypted text is correct.");
+            }
+        }
+    </script>
+</body>
+</html>
