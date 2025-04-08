@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centrifugal G-force Calculator</title>
+    <script>
+        function calculateGForce() {
+            // Get the inputs
+            var rpm = document.getElementById("rpm").value;
+            var radiusCm = document.getElementById("radius").value;
+            
+            // Convert radius to meters
+            var radiusM = radiusCm / 100;
+            
+            // Calculate tangential velocity (v = 2 * pi * r * RPM / 60)
+            var v = (2 * Math.PI * radiusM * rpm) / 60;
+            
+            // Calculate G-force (G = v^2 / (r * g))
+            var gForce = (v * v) / (radiusM * 9.81);
+            
+            // Display the result
+            document.getElementById("result").innerText = "Centrifugal G-force: " + gForce.toFixed(2) + " G";
+        }
+    </script>
+</head>
+<body>
+    <h1>Centrifugal G-force Calculator</h1>
+    <label for="rpm">Rotor RPM:</label>
+    <input type="number" id="rpm" placeholder="Enter RPM" required>
+    <br>
+    <label for="radius">Rotor Radius (cm):</label>
+    <input type="number" id="radius" placeholder="Enter radius in cm" required>
+    <br><br>
+    <button onclick="calculateGForce()">Calculate G-force</button>
+    <p id="result"></p>
+</body>
+</html>
