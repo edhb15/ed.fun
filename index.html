@@ -59,6 +59,17 @@
                 height: 50px; 
                 background-image: url(gforce.png');
                 background-size: cover; 
+                background-position: center;gues
+                border: 1px solid #000
+                cursor: pointer;
+                width: 100px;
+                margin-top: 20px;
+                margin-right: 10px;
+            }
+            .button5 {
+                height: 50px; 
+                background-image: url(guess.png');
+                background-size: cover; 
                 background-position: center; 
                 border: 1px solid #000
                 cursor: pointer;
@@ -83,6 +94,7 @@
             <button class="button2" id="button2" onclick="flightsimulator()"></button>
             <button class="button3" id="button3" onclick="enigmamachine()"></button>
             <button class="button4" id="button4" onclick="gforce()"></button>
+             <button class="button5" id="button5" onclick="guess()"></button>
         </div>
         <script>
             function open_polytrack() {
@@ -96,6 +108,9 @@
             }
             function gforce(){
                 window.location.href = "chicagobois.html"
+            }
+            function guess(){
+                window.location.href = "pong.html"
             }
         </script>
     </body>
