@@ -77,6 +77,17 @@
     margin-top: 20px;
     margin-right: 10px;
 }
+.button6 {
+    height: 50px; 
+    background-image: url('geo-fs.png');
+    background-size: cover; 
+    background-position: center; 
+    border: 1px solid #000;
+    cursor: pointer;
+    width: 100px;
+    margin-top: 20px;
+    margin-right: 10px;
+}
 
             #div2 {
                 text-align: center;
@@ -93,7 +104,8 @@
             <button class="button2" id="button2" onclick="flightsimulator()"></button>
             <button class="button3" id="button3" onclick="enigmamachine()"></button>
             <button class="button4" id="button4" onclick="gforce()"></button>
-             <button class="button5" id="button5" onclick="guess()"></button>
+            <button class="button5" id="button5" onclick="guess()"></button>
+            <button class="button6" id="button6" onclick="geofs()"></button>
         </div>
         <script>
             function open_polytrack() {
@@ -110,6 +122,9 @@
             }
             function guess(){
                 window.location.href = "pong.html"
+            }
+            function geofs(){
+                window.location.href = "https://www.geo-fs.com/geofs.php?v=3.9"
             }
         </script>
     </body>
