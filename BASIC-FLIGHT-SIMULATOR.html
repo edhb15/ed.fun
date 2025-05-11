@@ -447,7 +447,10 @@
 
         // Declare these variables in global scope
         let scene, camera, renderer, airplane, cockpitCamera;
-        let position, velocity, rotation, rotationVelocity;
+        let position = new THREE.Vector3(0, 100, 0);
+        let velocity = new THREE.Vector3(0, 0, 20);
+        let rotation = new THREE.Euler(0, 0, 0);
+        let rotationVelocity = new THREE.Vector3(0, 0, 0);
         let controls = {
             thrust: 0,
             pitch: 0,
