@@ -974,6 +974,19 @@
             orbitControls.maxDistance = 1000;
             orbitControls.maxPolarAngle = Math.PI / 2;
         }
+         // Dummy weather system (replace with your real implementation if you have one)
+         weatherSystem = {
+                    updateWeather: function() {
+                        // You can add real weather logic here later
+                    }
+                };
+
+                // Dummy time system (replace with your real implementation if you have one)
+                timeSystem = {
+                    updateLighting: function() {
+                        // You can add real time-of-day logic here later
+                    }
+                };
 
         // Initialize the flight simulator
         async function initFlightSimulator() {
@@ -1064,6 +1077,8 @@
                     clouds.add(cloud);
                 }
                 scene.add(clouds);
+
+               
 
                 // Update animation function to use composer if available
                 const originalAnimate = animate;
