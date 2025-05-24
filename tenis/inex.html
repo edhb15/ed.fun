@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>game</title>
+        <style>
+            body { margin: 0; }
+            canvas { display: block; }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    </head>
+    <body>
+        <script>
+        function checkWebGLSupport() {
+            try {
+                const canvas = document.createElement('canvas');
+                return !!(window.WebGLRenderingContext && 
+                    (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+            } catch (e) {
+                return false;
+            }
+        }
+        if (!checkWebGLSupport()) {
+            alert('Your browser does not support WebGL. Please try a different browser.');
+        }
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        scene.fog = new THREE.Fog(0x000000, 1, 1000);
+        scene.background = new THREE.Color(0x87CEEB);
+       
+        let player = null;
+        let playerSprintspeed = 0.5;
+        let playerSpeed = 0.3;
+        let playerJumpHeight = 10;
+        let playerCrouchHeight = 0.5;
+        let playerMass = 80;
+        let Gravity = 9.81;
+        
+        let moveForward = false;
+        let turnLeft = false;
+        let turnRight = false;
+        let jump = false;
+        let crouch = false;
+        let sprint = false;
+        let moveBackward = false;
+
+        // Create a placeholder player object
+        function createPlaceholderPlayer() {
+            const geometry = new THREE.BoxGeometry(1, 2, 1);
+            const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+            const placeholder = new THREE.Mesh(geometry, material);
+            placeholder.castShadow = true;
+            return placeholder;
+        }
+
+        function loadplayer(startPosX, startPosZ) {
+            try {
+                const loader = new THREE.OBJLoader();
+                loader.load('player.obj', 
+                    // onLoad callback
+                    (object) => {
+                        object.position.set(startPosX, 0.5, startPosZ);
+                        object.scale.set(0.1, 0.1, 0.1); 
+                        object.rotation.y = 0;
+                        scene.add(object);
+                        player = object;
+                    },
+                    // onProgress callback
+                    (xhr) => {
+                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                    },
+                    // onError callback
+                    (error) => {
+                        console.error('Error loading player model:', error);
+                        // Create and add placeholder player
+                        player = createPlaceholderPlayer();
+                        player.position.set(startPosX, 1, startPosZ);
+                        scene.add(player);
+                    }
+                );
+            } catch (error) {
+                console.error('Error in loadplayer:', error);
+                // Create and add placeholder player
+                player = createPlaceholderPlayer();
+                player.position.set(startPosX, 1, startPosZ);
+                scene.add(player);
+            }
+        }
+
+        function addLights() {
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+          
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight.position.set(100, 100, 50);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 4096;
+            dirLight.shadow.mapSize.height = 4096;
+            dirLight.shadow.camera.near = 1;
+            dirLight.shadow.camera.far = 500;
+            dirLight.shadow.camera.left = -50;
+            dirLight.shadow.camera.right = 50;
+            dirLight.shadow.camera.top = 50;
+            dirLight.shadow.camera.bottom = -50;
+            scene.add(dirLight);
+        
+            const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x404040, 0.6);
+            scene.add(hemisphereLight);
+        }
+
+        function addGround() {
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x87CEEB });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+        }
+
+        function handleKeyDown(event) {
+            switch(event.key.toLowerCase()) {
+                case 'w': moveForward = true; break;
+                case 's': moveBackward = true; break;
+                case 'a': turnLeft = true; break;
+                case 'd': turnRight = true; break;
+                case ' ': jump = true; break;
+                case 'shift': sprint = true; break;
+                case 'control': crouch = true; break;
+            }
+        }
+
+        function handleKeyUp(event) {
+            switch(event.key.toLowerCase()) {
+                case 'w': moveForward = false; break;
+                case 's': moveBackward = false; break;
+                case 'a': turnLeft = false; break;
+                case 'd': turnRight = false; break;
+                case ' ': jump = false; break;
+                case 'shift': sprint = false; break;
+                case 'control': crouch = false; break;
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        function handlePlayerMovement() {
+            if (!player) return;
+
+            const speed = sprint ? playerSprintspeed : playerSpeed;
+            
+            if (moveForward) {
+                player.position.z -= speed;
+            }
+            if (moveBackward) {
+                player.position.z += speed;
+            }
+            if (turnLeft) {
+                player.rotation.y += 0.05;
+            }
+            if (turnRight) {
+                player.rotation.y -= 0.05;
+            }
+            if (jump) {
+                player.position.y += 0.1;
+            }
+            if (crouch) {
+                if (player.scale) {
+                    player.scale.y = playerCrouchHeight;
+                }
+            } else {
+                if (player.scale) {
+                    player.scale.y = 0.1;
+                }
+            }
+        }
+
+        function updateCamera() {
+            if (!player) return;
+            
+            const cameraOffset = new THREE.Vector3(0, 5, 10);
+            cameraOffset.applyQuaternion(player.quaternion);
+            camera.position.copy(player.position).add(cameraOffset);
+            camera.lookAt(player.position);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            handlePlayerMovement();
+            updateCamera();
+            
+            renderer.render(scene, camera);
+        }
+
+        function init() {
+            addLights();
+            addGround();
+            loadplayer(0, 0);
+            animate();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+        </script>
+    </body>
+</html>
