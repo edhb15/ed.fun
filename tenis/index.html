@@ -83,7 +83,7 @@
                 const loader = new THREE.OBJLoader();
                 // Try to load from different possible paths
                 const possiblePaths = [
-                    '/ed.fun/tenis/player.obj',
+                    '/ed.fun/tenis/uploads_files_2792345_Koenigsegg.mtl.obj',
                     'player.obj',
                     './player.obj',
                     '../player.obj',
@@ -107,7 +107,7 @@
                     const path = possiblePaths[index];
                     console.log('Attempting to load from:', path);
                     
-                    loader.load(uploads_files_2792345_Koenigsegg.mtl.obj,
+                    loader.load(path,
                         // onLoad callback
                         (object) => {
                             console.log('Successfully loaded from:', path);
