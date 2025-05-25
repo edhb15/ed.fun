@@ -231,10 +231,9 @@
         function updateCamera() {
             if (!player) return;
             
-            const cameraOffset = new THREE.Vector3(0, 5, 10);
-            cameraOffset.applyQuaternion(player.quaternion);
+            const cameraOffset = new THREE.Vector3(0, 10, 20);
             camera.position.copy(player.position).add(cameraOffset);
-            camera.lookAt(player.position);
+            camera.lookAt(player.position.clone().add(new THREE.Vector3(0, 5, 0)));
         }
 
         function animate() {
