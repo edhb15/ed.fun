@@ -203,10 +203,12 @@
             const speed = sprint ? playerSprintspeed : playerSpeed;
             
             if (moveForward) {
-                player.position.z -= speed;
+                player.position.x -= Math.sin(player.rotation.y) * speed;
+                player.position.z -= Math.cos(player.rotation.y) * speed;
             }
             if (moveBackward) {
-                player.position.z += speed;
+                player.position.x += Math.sin(player.rotation.y) * speed;
+                player.position.z += Math.cos(player.rotation.y) * speed;
             }
             if (turnLeft) {
                 player.rotation.y += 0.05;
