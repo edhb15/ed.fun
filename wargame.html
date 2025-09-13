@@ -128,6 +128,87 @@
             border-radius: 50%;
         }
 
+        /* Mobile Controls */
+        #mobile-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            display: none;
+            pointer-events: none;
+        }
+
+        .mobile-control {
+            position: absolute;
+            background: rgba(0, 255, 0, 0.3);
+            border: 2px solid #00ff00;
+            border-radius: 50%;
+            color: #00ff00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: auto;
+            user-select: none;
+            touch-action: none;
+        }
+
+        #thrust-control {
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+        }
+
+        #pitch-control {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 120px;
+            border-radius: 30px;
+        }
+
+        #yaw-control {
+            bottom: 60px;
+            left: 20px;
+            width: 120px;
+            height: 60px;
+            border-radius: 30px;
+        }
+
+        #shoot-control {
+            bottom: 20px;
+            right: 120px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        #missile-control {
+            bottom: 100px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 165, 0, 0.3);
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: block;
+            }
+            
+            #instructions {
+                display: none;
+            }
+        }
+
         #instructions {
             bottom: 20px;
             right: 20px;
@@ -211,6 +292,15 @@
             </div>
         </div>
 
+        <!-- Mobile Controls -->
+        <div id="mobile-controls">
+            <div id="thrust-control" class="mobile-control">THRUST</div>
+            <div id="pitch-control" class="mobile-control">↑↓</div>
+            <div id="yaw-control" class="mobile-control">←→</div>
+            <div id="shoot-control" class="mobile-control">FIRE</div>
+            <div id="missile-control" class="mobile-control">AAM</div>
+        </div>
+
         <div id="gameOver">
             <h2>GAME OVER</h2>
             <p>Final Score: <span id="finalScore">0</span></p>
@@ -267,6 +357,17 @@
                 this.mouse = { x: 0, y: 0 };
                 this.mouseDown = false;
                 this.rightMouseDown = false;
+                
+                // Mobile touch state
+                this.touchState = {
+                    thrustActive: false,
+                    pitchUp: false,
+                    pitchDown: false,
+                    yawLeft: false,
+                    yawRight: false,
+                    shooting: false,
+                    missile: false
+                };
 
                 this.setupScene();
                 this.createJet();
@@ -804,12 +905,95 @@
                         this.renderer.domElement.requestPointerLock();
                     }
                 });
+                
+                // Mobile touch controls
+                this.setupMobileControls();
+            }
+
+            setupMobileControls() {
+                // Thrust control
+                document.getElementById('thrust-control').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.touchState.thrustActive = true;
+                });
+                
+                document.getElementById('thrust-control').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.touchState.thrustActive = false;
+                });
+
+                // Pitch controls
+                document.getElementById('pitch-control').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const rect = e.target.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    if (touch.clientY < centerY) {
+                        this.touchState.pitchUp = true;
+                    } else {
+                        this.touchState.pitchDown = true;
+                    }
+                });
+                
+                document.getElementById('pitch-control').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.touchState.pitchUp = false;
+                    this.touchState.pitchDown = false;
+                });
+
+                // Yaw controls
+                document.getElementById('yaw-control').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const rect = e.target.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    const centerX = rect.left + rect.width / 2;
+                    
+                    if (touch.clientX < centerX) {
+                        this.touchState.yawLeft = true;
+                    } else {
+                        this.touchState.yawRight = true;
+                    }
+                });
+                
+                document.getElementById('yaw-control').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.touchState.yawLeft = false;
+                    this.touchState.yawRight = false;
+                });
+
+                // Shoot control
+                document.getElementById('shoot-control').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.touchState.shooting = true;
+                });
+                
+                document.getElementById('shoot-control').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.touchState.shooting = false;
+                });
+
+                // Missile control
+                document.getElementById('missile-control').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.touchState.missile = true;
+                });
+                
+                document.getElementById('missile-control').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.touchState.missile = false;
+                });
             }
 
             updateJet() {
                 if (!this.jet) return;
 
-                const throttle = this.gameState.thrust / 9; // Convert 1-9 to 0.11-1.0
+                // Apply mobile thrust boost when thrust button is held
+                let throttle = this.gameState.thrust / 9; // Convert 1-9 to 0.11-1.0
+                if (this.touchState.thrustActive) {
+                    throttle = Math.min(1.0, throttle * 1.5); // Boost thrust on mobile
+                }
+                
                 const speedBrakes = this.keys['Space'] ? 0.4 : 1.0;
                 const speed = this.flightPhysics.velocity.length();
 
@@ -833,17 +1017,17 @@
                 this.flightPhysics.velocity.y = Math.max(-5, Math.min(5, this.flightPhysics.velocity.y));
                 this.flightPhysics.velocity.z = Math.max(-5, Math.min(5, this.flightPhysics.velocity.z));
 
-                // Control surface inputs
-                if (this.keys['ArrowUp']) {
+                // Control surface inputs (keyboard + mobile)
+                if (this.keys['ArrowUp'] || this.touchState.pitchUp) {
                     this.flightPhysics.pitch += 0.0015;
                 }
-                if (this.keys['ArrowDown']) {
+                if (this.keys['ArrowDown'] || this.touchState.pitchDown) {
                     this.flightPhysics.pitch -= 0.0015;
                 }
-                if (this.keys['ArrowLeft']) {
+                if (this.keys['ArrowLeft'] || this.touchState.yawLeft) {
                     this.flightPhysics.yaw += 0.0015;
                 }
-                if (this.keys['ArrowRight']) {
+                if (this.keys['ArrowRight'] || this.touchState.yawRight) {
                     this.flightPhysics.yaw -= 0.0015;
                 }
 
@@ -904,14 +1088,14 @@
                     this.flightPhysics.velocity.y -= 0.02; // Stall behavior
                 }
 
-                // Combat
-                if (this.mouseDown && Date.now() - this.lastShot > 80) {
-                    console.log("Mouse down detected, attempting to shoot");
+                // Combat (mouse + mobile)
+                if ((this.mouseDown || this.touchState.shooting) && Date.now() - this.lastShot > 80) {
+                    console.log("Shooting detected, attempting to shoot");
                     this.shoot();
                     this.lastShot = Date.now();
                 }
 
-                if (this.rightMouseDown && Date.now() - this.lastMissile > 800) {
+                if ((this.rightMouseDown || this.touchState.missile) && Date.now() - this.lastMissile > 800) {
                     const target = this.findNearestEnemy();
                     if (target && this.gameState.missiles > 0) {
                         this.createMissile(this.jet.position.clone(), target);
