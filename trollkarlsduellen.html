@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ladda ner Trollkarlsduellen</title>
+</head>
+<body>
+    <button id="downloadBtn">Ladda ner Scratch-projektet Trollkarlsduellen</button>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            // Create <a> element
+            const link = document.createElement('a');
+            
+            // Set href to the file in the same folder
+            link.href = 'trollkarsduelen.sb3';
+            
+            // Set download attribute with desired filename
+            link.download = 'trollkarsduelen.sb3';
+            
+            // Make link invisible
+            link.style.display = 'none';
+            
+            // Add to document
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
