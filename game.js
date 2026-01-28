@@ -62,7 +62,7 @@ function startGame() {
   const loader = new GLTFLoader();
   loader.load("car.glb", gltf => {
     car = gltf.scene;
-    car.scale.set(1.2, 1.2, 1.2);
+    car.scale.set(1.2, 1.5, 1.2);
     car.rotation.y = Math.PI;
     scene.add(car);
 
