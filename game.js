@@ -179,8 +179,8 @@ function startGame() {
     if (keys["KeyS"]) speed -= 0.04;
     speed *= 0.95;
 
-    if (keys["KeyA"]) turn += 0.025;
-    if (keys["KeyD"]) turn -= 0.025;
+    if (keys["KeyA"]) turn += 0.03;
+    if (keys["KeyD"]) turn -= 0.03;
     turn *= 0.8;
 
     car.rotation.y += turn;
