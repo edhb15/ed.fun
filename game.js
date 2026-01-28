@@ -62,7 +62,7 @@ function startGame() {
   const loader = new GLTFLoader();
   loader.load("car.glb", gltf => {
     car = gltf.scene;
-    car.scale.set(1.2, 1.5, 1.2);
+    car.scale.set(1.2, 1.0, 1.2);
     car.rotation.y = Math.PI;
     scene.add(car);
 
@@ -179,8 +179,8 @@ function startGame() {
     if (keys["KeyS"]) speed -= 0.04;
     speed *= 0.95;
 
-    if (keys["KeyA"]) turn += 0.03;
-    if (keys["KeyD"]) turn -= 0.03;
+    if (keys["KeyA"]) turn += 0.025;
+    if (keys["KeyD"]) turn -= 0.025;
     turn *= 0.8;
 
     car.rotation.y += turn;
