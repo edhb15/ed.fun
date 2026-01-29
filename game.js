@@ -99,7 +99,7 @@ let saveDataObj = loadSave();
     );
     carHitbox.position.y = 0.5;
     scene.add(carHitbox);
-  });
+  };
 
   // ---------- OBSTACLES ----------
   const obstacles = [];
