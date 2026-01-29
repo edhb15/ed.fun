@@ -269,4 +269,3 @@ let saveDataObj = loadSave();
   }
 
   animate();
-}
