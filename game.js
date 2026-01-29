@@ -15,9 +15,35 @@ startBtn.onclick = () => {
 };
 
 restartBtn.onclick = () => location.reload();
+const CAR_MODELS = {
+  default: "car.glb",
+  sport: "sport_car.glb",
+  super: "super_car.glb"
+};
 
 // ===================== GAME =====================
 function startGame() {
+  let selectedCar = "default";
+
+// Auto-select best unlocked car
+if (saveDataObj.unlockedCars.includes("super")) selectedCar = "super";
+else if (saveDataObj.unlockedCars.includes("sport")) selectedCar = "sport";
+
+  const SAVE_KEY = "kartSurvivalData";
+
+function loadSave() {
+  return JSON.parse(localStorage.getItem(SAVE_KEY)) || {
+    bestTime: null,
+    unlockedCars: ["default"]
+  };
+}
+
+function saveData(data) {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+}
+
+let saveDataObj = loadSave();
+
   // ---------- SCENE ----------
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xbfe9ff);
@@ -59,12 +85,13 @@ function startGame() {
   let car, carHitbox;
   let speed = 0, turn = 0;
 
-  const loader = new GLTFLoader();
-  loader.load("car.glb", gltf => {
+  loader.load(CAR_MODELS[selectedCar], gltf => {
     car = gltf.scene;
-    car.scale.set(1.2, 1.0, 1.2);
+    car.scale.set(1.2, 1.2, 1.2);
     car.rotation.y = Math.PI;
     scene.add(car);
+  });
+  
 
     carHitbox = new THREE.Mesh(
       new THREE.BoxGeometry(1.6, 1, 3.2),
@@ -138,7 +165,9 @@ function startGame() {
   }
 
   // ---------- TIMER ----------
-  let timeLeft = 60;
+  const GAME_TIME_LIMIT = 60;
+  let startTime = performance.now();
+
 
   // ---------- COLLISION ----------
   function collide(obj) {
@@ -150,10 +179,29 @@ function startGame() {
   }
 
   // ---------- END ----------
-  function endGame(text) {
-    endTitle.innerText = text;
+  function handleWin() {
+    const finishTime = (performance.now() - startTime) / 1000;
+  
+    // Best time logic
+    if (!saveDataObj.bestTime || finishTime < saveDataObj.bestTime) {
+      saveDataObj.bestTime = finishTime;
+    }
+  
+    // Unlock logic
+    if (finishTime < 45 && !saveDataObj.unlockedCars.includes("sport")) {
+      saveDataObj.unlockedCars.push("sport");
+    }
+  
+    if (finishTime < 35 && !saveDataObj.unlockedCars.includes("super")) {
+      saveDataObj.unlockedCars.push("super");
+    }
+  
+    saveData(saveDataObj);
+  
+    endTitle.innerText = `YOU WIN!\nTime: ${finishTime.toFixed(2)}s`;
     endScreen.style.display = "flex";
   }
+  
 
   // ---------- RESIZE ----------
   window.onresize = () => {
@@ -171,7 +219,7 @@ function startGame() {
     timeLeft -= 1 / 60;
     timerDiv.innerText = `Time: ${timeLeft.toFixed(1)} | Coins: ${coins.length}`;
 
-    if (coins.length === 0) return endGame("YOU WIN 🎉");
+    if (coins.length === 0) return handleWin();
     if (timeLeft <= 0) return endGame("GAME OVER 😢");
 
     // Controls
@@ -179,7 +227,7 @@ function startGame() {
     if (keys["KeyS"]) speed -= 0.04;
     speed *= 0.95;
 
-    if (keys["KeyA"]) turn += 0.025;
+    if (keys["KeyA"]) turn += 0.025;4
     if (keys["KeyD"]) turn -= 0.025;
     turn *= 0.8;
 
